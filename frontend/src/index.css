@@ -1,14 +1,14 @@
 /* CSS Custom Properties for Light and Dark Themes */
 :root {
   /* Light theme (default) */
-  --color-primary: #3182ce;
-  --color-primary-hover: #2c5aa0;
-  --color-secondary: #e2e8f0;
-  --color-secondary-hover: #cbd5e0;
+  --color-primary: #667eea;
+  --color-primary-hover: #5a67d8;
+  --color-secondary: rgba(255, 255, 255, 0.1);
+  --color-secondary-hover: rgba(255, 255, 255, 0.2);
   
-  --color-background: #f8fafc;
-  --color-surface: #ffffff;
-  --color-surface-hover: #f8fafc;
+  --color-background: rgba(248, 250, 252, 0.95);
+  --color-surface: rgba(255, 255, 255, 0.9);
+  --color-surface-hover: rgba(255, 255, 255, 0.95);
   
   --color-text: #1a202c;
   --color-text-secondary: #4a5568;
@@ -24,8 +24,9 @@
   --color-error: #dc2626;
   --color-error-bg: #fecaca;
   
-  --shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-  --shadow-hover: 0 4px 6px rgba(0, 0, 0, 0.1);
+  --shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+  --shadow-hover: 0 8px 25px rgba(0, 0, 0, 0.15);
+  --shadow-glow: 0 0 20px rgba(102, 126, 234, 0.3);
   
   /* Status colors for light theme */
   --status-todo-bg: #e2e8f0;
@@ -48,14 +49,14 @@
 
 /* Dark theme */
 [data-theme="dark"] {
-  --color-primary: #60a5fa;
-  --color-primary-hover: #3b82f6;
-  --color-secondary: #374151;
-  --color-secondary-hover: #4b5563;
+  --color-primary: #667eea;
+  --color-primary-hover: #764ba2;
+  --color-secondary: rgba(255, 255, 255, 0.1);
+  --color-secondary-hover: rgba(255, 255, 255, 0.2);
   
-  --color-background: #111827;
-  --color-surface: #1f2937;
-  --color-surface-hover: #374151;
+  --color-background: rgba(17, 24, 39, 0.95);
+  --color-surface: rgba(31, 41, 55, 0.9);
+  --color-surface-hover: rgba(55, 65, 81, 0.9);
   
   --color-text: #f9fafb;
   --color-text-secondary: #d1d5db;
@@ -71,8 +72,9 @@
   --color-error: #f87171;
   --color-error-bg: #7f1d1d;
   
-  --shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
-  --shadow-hover: 0 4px 6px rgba(0, 0, 0, 0.4);
+  --shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+  --shadow-hover: 0 8px 25px rgba(0, 0, 0, 0.4);
+  --shadow-glow: 0 0 20px rgba(102, 126, 234, 0.4);
   
   /* Status colors for dark theme */
   --status-todo-bg: #374151;
@@ -105,9 +107,11 @@ body {
     sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  background-color: var(--color-background);
+  background: transparent;
   color: var(--color-text);
-  transition: background-color 0.3s ease, color 0.3s ease;
+  transition: all 0.3s ease;
+  min-height: 100vh;
+  overflow-x: hidden;
 }
 
 code {
@@ -169,7 +173,7 @@ code {
 .btn-primary:hover {
   background-color: var(--color-primary-hover);
   transform: translateY(-2px);
-  box-shadow: 0 4px 8px rgba(49, 130, 206, 0.3);
+  box-shadow: var(--shadow-glow);
 }
 
 .btn-primary:disabled {
@@ -223,13 +227,27 @@ code {
 
 .card {
   background: var(--color-surface);
-  border-radius: 8px;
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 16px;
   box-shadow: var(--shadow);
   padding: 24px;
   margin-bottom: 20px;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   transform: translateY(0);
   will-change: transform, box-shadow;
+  position: relative;
+  overflow: hidden;
+}
+
+.card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
 }
 
 .card:hover {
@@ -366,12 +384,49 @@ code {
 
 @keyframes focusPulse {
   0% {
-    box-shadow: 0 0 0 0 rgba(49, 130, 206, 0.4);
+    box-shadow: 0 0 0 0 rgba(102, 126, 234, 0.4);
   }
   70% {
-    box-shadow: 0 0 0 6px rgba(49, 130, 206, 0);
+    box-shadow: 0 0 0 6px rgba(102, 126, 234, 0);
   }
   100% {
-    box-shadow: 0 0 0 0 rgba(49, 130, 206, 0);
+    box-shadow: 0 0 0 0 rgba(102, 126, 234, 0);
   }
+}
+
+/* Glassmorphism effects */
+.glass {
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 16px;
+}
+
+[data-theme="dark"] .glass {
+  background: rgba(0, 0, 0, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* Gradient text effects */
+.gradient-text {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Shimmer loading effect */
+@keyframes shimmer {
+  0% {
+    background-position: -200px 0;
+  }
+  100% {
+    background-position: calc(200px + 100%) 0;
+  }
+}
+
+.shimmer {
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+  background-size: 200px 100%;
+  animation: shimmer 1.5s infinite;
 }

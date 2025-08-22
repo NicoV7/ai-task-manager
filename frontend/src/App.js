@@ -3,6 +3,7 @@ import { Routes, Route, Navigate } from 'react-router-dom';
 import { useAuth } from './contexts/AuthContext';
 import { ThemeProvider } from './contexts/ThemeContext';
 import Layout from './components/Layout';
+import AnimatedBackground from './components/AnimatedBackground';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import Dashboard from './pages/Dashboard';
@@ -21,6 +22,7 @@ function App() {
   return (
     <ThemeProvider>
       <div className="App">
+        <AnimatedBackground />
         <Routes>
           <Route
             path="/login"

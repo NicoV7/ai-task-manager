@@ -1,5 +1,6 @@
 from django.db import models
 from django.contrib.auth.models import User
+from django.core.validators import MinValueValidator, MaxValueValidator
 
 
 class Task(models.Model):
@@ -16,12 +17,30 @@ class Task(models.Model):
         ('completed', 'Completed'),
         ('cancelled', 'Cancelled'),
     ]
+    
+    VELOCITY_CHOICES = [
+        ('slow', 'Slow'),
+        ('normal', 'Normal'),
+        ('fast', 'Fast'),
+        ('urgent', 'Urgent'),
+    ]
 
     title = models.CharField(max_length=200)
     description = models.TextField(blank=True)
     notes = models.TextField(blank=True, help_text="Task notes and AI conversation history")
     priority = models.CharField(max_length=10, choices=PRIORITY_CHOICES, default='medium')
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='todo')
+    progress = models.IntegerField(
+        default=0,
+        validators=[MinValueValidator(0), MaxValueValidator(100)],
+        help_text="Task completion progress (0-100%)"
+    )
+    velocity = models.CharField(
+        max_length=10, 
+        choices=VELOCITY_CHOICES, 
+        default='normal',
+        help_text="Task development velocity"
+    )
     due_date = models.DateTimeField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)

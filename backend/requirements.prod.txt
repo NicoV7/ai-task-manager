@@ -1,0 +1,30 @@
+# Production requirements for AI Task Manager Backend
+
+# Base requirements
+-r requirements.txt
+
+# Production-specific packages
+gunicorn==21.2.0
+whitenoise==6.6.0
+psycopg2-binary==2.9.9
+
+# Security and monitoring
+django-cors-headers==4.3.1
+django-ratelimit==4.1.0
+django-extensions==3.2.3
+
+# Performance
+django-cache-machine==1.2.0
+redis==5.0.1
+
+# Health checks
+django-health-check==3.17.0
+
+# Error tracking (optional - uncomment if using Sentry)
+# sentry-sdk[django]==1.38.0
+
+# Environment management
+python-decouple==3.8
+
+# Static file serving
+brotli==1.1.0

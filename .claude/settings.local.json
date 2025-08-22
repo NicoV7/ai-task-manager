@@ -4,7 +4,11 @@
       "Bash(docker-compose logs:*)",
       "Bash(python manage.py:*)",
       "Bash(docker-compose exec:*)",
-      "Bash(docker-compose up:*)"
+      "Bash(docker-compose up:*)",
+      "Bash(chmod:*)",
+      "Bash(touch:*)",
+      "Bash(docker-compose restart:*)",
+      "Bash(curl:*)"
     ],
     "deny": [],
     "ask": []

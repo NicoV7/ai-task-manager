@@ -15,12 +15,19 @@ class TaskSerializer(serializers.ModelSerializer):
         write_only=True,
         required=False
     )
+    
+    def validate_progress(self, value):
+        """Validate that progress is between 0 and 100."""
+        if value < 0 or value > 100:
+            raise serializers.ValidationError("Progress must be between 0 and 100.")
+        return value
 
     class Meta:
         model = Task
         fields = [
             'id', 'title', 'description', 'notes', 'priority', 'status',
-            'due_date', 'created_at', 'updated_at', 'tags', 'tag_ids'
+            'progress', 'velocity', 'due_date', 'created_at', 'updated_at', 
+            'tags', 'tag_ids'
         ]
 
     def create(self, validated_data):
