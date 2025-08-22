@@ -2,7 +2,8 @@ import React, { useState } from 'react';
 import { useQuery } from 'react-query';
 import { Link } from 'react-router-dom';
 import { tasksAPI } from '../services/api';
-import { Plus, Search, Filter } from 'lucide-react';
+import { extractTasksFromResponse } from '../utils/tasks';
+import { Plus } from 'lucide-react';
 import styled from 'styled-components';
 
 const Header = styled.div`
@@ -26,15 +27,37 @@ const Controls = styled.div`
 
 const SearchInput = styled.input`
   padding: 10px 15px;
-  border: 1px solid #d1d5db;
+  border: 1px solid var(--color-border);
   border-radius: 6px;
   width: 300px;
+  background: var(--color-surface);
+  color: var(--color-text);
+  transition: all 0.3s ease;
+  
+  &:focus {
+    outline: none;
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 3px rgba(49, 130, 206, 0.1);
+  }
+  
+  &::placeholder {
+    color: var(--color-text-muted);
+  }
 `;
 
 const FilterSelect = styled.select`
   padding: 10px 15px;
-  border: 1px solid #d1d5db;
+  border: 1px solid var(--color-border);
   border-radius: 6px;
+  background: var(--color-surface);
+  color: var(--color-text);
+  transition: all 0.3s ease;
+  
+  &:focus {
+    outline: none;
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 3px rgba(49, 130, 206, 0.1);
+  }
 `;
 
 const TaskGrid = styled.div`
@@ -43,18 +66,22 @@ const TaskGrid = styled.div`
 `;
 
 const TaskCard = styled(Link)`
-  background: white;
+  background: var(--color-surface);
   padding: 24px;
   border-radius: 8px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  box-shadow: var(--shadow);
   text-decoration: none;
   color: inherit;
-  transition: all 0.2s;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   border: 1px solid transparent;
+  animation: fadeInScale 0.4s ease-out;
+  transform: translateY(0);
+  will-change: transform, box-shadow;
 
   &:hover {
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-    border-color: #3182ce;
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-hover);
+    border-color: var(--color-primary);
   }
 `;
 
@@ -68,8 +95,9 @@ const TaskHeader = styled.div`
 const TaskTitle = styled.h3`
   margin: 0;
   font-size: 18px;
-  color: #1a202c;
+  color: var(--color-text);
   flex: 1;
+  transition: color 0.3s ease;
 `;
 
 const StatusBadge = styled.span`
@@ -79,19 +107,36 @@ const StatusBadge = styled.span`
   font-weight: 500;
   text-transform: uppercase;
   margin-left: 12px;
+  transition: all 0.3s ease;
   
   ${props => {
     switch (props.status) {
       case 'todo':
-        return 'background: #e2e8f0; color: #4a5568;';
+        return `
+          background: var(--status-todo-bg);
+          color: var(--status-todo-text);
+        `;
       case 'in_progress':
-        return 'background: #fef3c7; color: #d69e2e;';
+        return `
+          background: var(--status-progress-bg);
+          color: var(--status-progress-text);
+        `;
       case 'completed':
-        return 'background: #dcfce7; color: #16a34a;';
+        return `
+          background: var(--status-completed-bg);
+          color: var(--status-completed-text);
+        `;
       default:
-        return 'background: #e2e8f0; color: #4a5568;';
+        return `
+          background: var(--status-todo-bg);
+          color: var(--status-todo-text);
+        `;
     }
   }}
+  
+  &:hover {
+    transform: scale(1.05);
+  }
 `;
 
 const PriorityBadge = styled.span`
@@ -100,44 +145,67 @@ const PriorityBadge = styled.span`
   font-size: 12px;
   font-weight: 500;
   margin-right: 8px;
+  transition: all 0.3s ease;
   
   ${props => {
     switch (props.priority) {
       case 'urgent':
-        return 'background: #fecaca; color: #dc2626;';
+        return `
+          background: var(--priority-urgent-bg);
+          color: var(--priority-urgent-text);
+        `;
       case 'high':
-        return 'background: #fed7aa; color: #ea580c;';
+        return `
+          background: var(--priority-high-bg);
+          color: var(--priority-high-text);
+        `;
       case 'medium':
-        return 'background: #fef3c7; color: #d69e2e;';
+        return `
+          background: var(--priority-medium-bg);
+          color: var(--priority-medium-text);
+        `;
       case 'low':
-        return 'background: #dcfce7; color: #16a34a;';
+        return `
+          background: var(--priority-low-bg);
+          color: var(--priority-low-text);
+        `;
       default:
-        return 'background: #e2e8f0; color: #4a5568;';
+        return `
+          background: var(--status-todo-bg);
+          color: var(--status-todo-text);
+        `;
     }
   }}
+  
+  &:hover {
+    transform: scale(1.05);
+  }
 `;
 
 const TaskDescription = styled.p`
   margin: 0 0 16px 0;
-  color: #6b7280;
+  color: var(--color-text-secondary);
   line-height: 1.5;
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
+  transition: color 0.3s ease;
 `;
 
 const TaskMeta = styled.div`
   display: flex;
   align-items: center;
   font-size: 14px;
-  color: #6b7280;
+  color: var(--color-text-muted);
+  transition: color 0.3s ease;
 `;
 
 const EmptyState = styled.div`
   text-align: center;
   padding: 60px 20px;
-  color: #6b7280;
+  color: var(--color-text-muted);
+  animation: fadeIn 0.5s ease-out;
 `;
 
 function TaskList() {
@@ -145,13 +213,16 @@ function TaskList() {
   const [statusFilter, setStatusFilter] = useState('');
   const [priorityFilter, setPriorityFilter] = useState('');
 
-  const { data: tasks = [], isLoading } = useQuery('tasks', () =>
+  const { data: tasksResponse, isLoading } = useQuery('tasks', () =>
     tasksAPI.getTasks().then(res => res.data)
   );
 
+  // Safely extract tasks from API response
+  const tasks = extractTasksFromResponse(tasksResponse);
+
   const filteredTasks = tasks.filter(task => {
-    const matchesSearch = task.title.toLowerCase().includes(search.toLowerCase()) ||
-                         task.description.toLowerCase().includes(search.toLowerCase());
+    const matchesSearch = task.title?.toLowerCase().includes(search.toLowerCase()) ||
+                         task.description?.toLowerCase().includes(search.toLowerCase());
     const matchesStatus = !statusFilter || task.status === statusFilter;
     const matchesPriority = !priorityFilter || task.priority === priorityFilter;
     
@@ -163,8 +234,8 @@ function TaskList() {
   }
 
   return (
-    <div>
-      <Header>
+    <div className="animate-fade-in">
+      <Header className="animate-slide-up">
         <Title>Tasks</Title>
         <Controls>
           <SearchInput
@@ -203,7 +274,7 @@ function TaskList() {
       </Header>
 
       {filteredTasks.length > 0 ? (
-        <TaskGrid>
+        <TaskGrid className="stagger-children">
           {filteredTasks.map(task => (
             <TaskCard key={task.id} to={`/tasks/${task.id}`}>
               <TaskHeader>

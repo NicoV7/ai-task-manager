@@ -210,6 +210,7 @@ __marimo__/
 .env
 .env.local
 .env.production
+.env.development
 
 # Docker volumes
 postgres_data/
@@ -257,3 +258,42 @@ media/
 # Coverage
 .coverage
 htmlcov/
+
+# React specific
+/frontend/build
+/frontend/node_modules
+/frontend/.pnp
+/frontend/.pnp.js
+/frontend/coverage
+/frontend/.nyc_output
+/frontend/.eslintcache
+
+# Django specific
+/backend/staticfiles/
+/backend/media/
+/backend/db.sqlite3
+/backend/db.sqlite3-journal
+/backend/*.log
+/backend/local_settings.py
+
+# Docker
+docker-compose.override.yml
+.dockerignore
+
+# Temporary files
+*.tmp
+*.temp
+.cache/
+
+# Package managers
+yarn.lock
+package-lock.json
+pip-log.txt
+pip-delete-this-directory.txt
+
+# API keys and secrets (additional protection)
+**/secrets/
+**/*secret*
+**/*key*
+!**/package.json
+!**/requirements.txt

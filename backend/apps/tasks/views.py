@@ -3,8 +3,12 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from django.shortcuts import get_object_or_404
+import logging
 from .models import Task, Tag, AIAssistantInteraction
 from .serializers import TaskSerializer, TagSerializer, AIAssistantInteractionSerializer
+from .services import claude_service
+
+logger = logging.getLogger(__name__)
 
 
 class TaskViewSet(viewsets.ModelViewSet):
@@ -19,21 +23,46 @@ class TaskViewSet(viewsets.ModelViewSet):
 
     @action(detail=True, methods=['post'])
     def ai_suggest(self, request, pk=None):
+        """
+        Get AI suggestions for a task using Claude API
+        """
         task = self.get_object()
         user_message = request.data.get('message', '')
         
-        ai_response = "AI suggestion placeholder"
+        if not user_message.strip():
+            return Response(
+                {'error': 'Message is required'}, 
+                status=status.HTTP_400_BAD_REQUEST
+            )
         
-        interaction = AIAssistantInteraction.objects.create(
-            task=task,
-            user_message=user_message,
-            ai_response=ai_response
-        )
-        
-        return Response({
-            'ai_response': ai_response,
-            'interaction_id': interaction.id
-        })
+        try:
+            # Get AI suggestion from Claude
+            ai_response = claude_service.get_task_suggestion(
+                task_title=task.title,
+                task_description=task.description or "",
+                user_message=user_message
+            )
+            
+            # Save the interaction
+            interaction = AIAssistantInteraction.objects.create(
+                task=task,
+                user_message=user_message,
+                ai_response=ai_response
+            )
+            
+            logger.info(f"AI suggestion generated for task {task.id} by user {request.user.id}")
+            
+            return Response({
+                'ai_response': ai_response,
+                'interaction_id': interaction.id
+            })
+            
+        except Exception as e:
+            logger.error(f"Error generating AI suggestion: {str(e)}")
+            return Response(
+                {'error': 'Failed to generate AI suggestion. Please try again.'},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
 
     @action(detail=False, methods=['get'])
     def by_status(self, request):

@@ -2,6 +2,7 @@ import React from 'react';
 import { useQuery } from 'react-query';
 import { Link } from 'react-router-dom';
 import { tasksAPI } from '../services/api';
+import { extractTasksFromResponse, filterTasksByStatus, filterTasksByPriority } from '../utils/tasks';
 import { CheckSquare, Clock, AlertCircle, Plus } from 'lucide-react';
 import styled from 'styled-components';
 
@@ -13,13 +14,21 @@ const DashboardGrid = styled.div`
 `;
 
 const StatCard = styled.div`
-  background: white;
+  background: var(--color-surface);
   padding: 24px;
   border-radius: 8px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  box-shadow: var(--shadow);
   display: flex;
   align-items: center;
   gap: 16px;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  cursor: pointer;
+  animation: fadeInScale 0.4s ease-out;
+  
+  &:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-hover);
+  }
 `;
 
 const StatIcon = styled.div`
@@ -29,8 +38,13 @@ const StatIcon = styled.div`
   display: flex;
   align-items: center;
   justify-content: center;
-  background: ${props => props.bg || '#e2e8f0'};
-  color: ${props => props.color || '#4a5568'};
+  background: ${props => props.bg || 'var(--color-secondary)'};
+  color: ${props => props.color || 'var(--color-text-secondary)'};
+  transition: all 0.3s ease;
+  
+  ${StatCard}:hover & {
+    transform: scale(1.1) rotate(5deg);
+  }
 `;
 
 const StatInfo = styled.div`
@@ -40,17 +54,20 @@ const StatInfo = styled.div`
 const StatNumber = styled.div`
   font-size: 24px;
   font-weight: bold;
-  color: #1a202c;
+  color: var(--color-text);
+  transition: color 0.3s ease;
 `;
 
 const StatLabel = styled.div`
-  color: #4a5568;
+  color: var(--color-text-secondary);
   font-size: 14px;
+  transition: color 0.3s ease;
 `;
 
 const SectionTitle = styled.h2`
   margin-bottom: 20px;
-  color: #1a202c;
+  color: var(--color-text);
+  transition: color 0.3s ease;
 `;
 
 const TaskGrid = styled.div`
@@ -60,18 +77,26 @@ const TaskGrid = styled.div`
 `;
 
 const TaskSection = styled.div`
-  background: white;
+  background: var(--color-surface);
   border-radius: 8px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  box-shadow: var(--shadow);
   overflow: hidden;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  animation: slideInUp 0.4s ease-out;
+  
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-hover);
+  }
 `;
 
 const TaskSectionHeader = styled.div`
   padding: 16px 20px;
-  background: #f8fafc;
-  border-bottom: 1px solid #e2e8f0;
+  background: var(--color-background);
+  border-bottom: 1px solid var(--color-border);
   font-weight: 600;
-  color: #1a202c;
+  color: var(--color-text);
+  transition: all 0.3s ease;
 `;
 
 const TaskList = styled.div`
@@ -82,13 +107,37 @@ const TaskList = styled.div`
 const TaskItem = styled(Link)`
   display: block;
   padding: 12px 20px;
-  border-bottom: 1px solid #f1f5f9;
+  border-bottom: 1px solid var(--color-border-light);
   text-decoration: none;
-  color: #1a202c;
-  transition: background 0.2s;
+  color: var(--color-text);
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(
+      90deg,
+      transparent,
+      rgba(49, 130, 206, 0.1),
+      transparent
+    );
+    transition: left 0.5s ease;
+  }
 
   &:hover {
-    background: #f8fafc;
+    background: var(--color-surface-hover);
+    transform: translateX(4px);
+    padding-left: 24px;
+  }
+
+  &:hover::before {
+    left: 100%;
   }
 
   &:last-child {
@@ -99,21 +148,25 @@ const TaskItem = styled(Link)`
 const TaskTitle = styled.div`
   font-weight: 500;
   margin-bottom: 4px;
+  transition: color 0.3s ease;
 `;
 
 const TaskMeta = styled.div`
   font-size: 12px;
-  color: #6b7280;
+  color: var(--color-text-muted);
+  transition: color 0.3s ease;
 `;
 
 const EmptyState = styled.div`
   padding: 40px 20px;
   text-align: center;
-  color: #6b7280;
+  color: var(--color-text-muted);
+  font-style: italic;
+  animation: fadeIn 0.5s ease-out;
 `;
 
 function Dashboard() {
-  const { data: tasks = [], isLoading } = useQuery('tasks', () =>
+  const { data: tasksResponse, isLoading } = useQuery('tasks', () =>
     tasksAPI.getTasks().then(res => res.data)
   );
 
@@ -121,16 +174,19 @@ function Dashboard() {
     return <div>Loading dashboard...</div>;
   }
 
-  const todoTasks = tasks.filter(task => task.status === 'todo');
-  const inProgressTasks = tasks.filter(task => task.status === 'in_progress');
-  const completedTasks = tasks.filter(task => task.status === 'completed');
-  const highPriorityTasks = tasks.filter(task => task.priority === 'high' || task.priority === 'urgent');
+  // Safely extract tasks from API response
+  const tasks = extractTasksFromResponse(tasksResponse);
+
+  const todoTasks = filterTasksByStatus(tasks, 'todo');
+  const inProgressTasks = filterTasksByStatus(tasks, 'in_progress');
+  const completedTasks = filterTasksByStatus(tasks, 'completed');
+  const highPriorityTasks = filterTasksByPriority(tasks, ['high', 'urgent']);
 
   return (
-    <div>
-      <h1>Dashboard</h1>
+    <div className="animate-fade-in">
+      <h1 className="animate-slide-up">Dashboard</h1>
       
-      <DashboardGrid>
+      <DashboardGrid className="stagger-children">
         <StatCard>
           <StatIcon bg="#dbeafe" color="#3b82f6">
             <CheckSquare size={24} />

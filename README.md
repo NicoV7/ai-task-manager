@@ -1,62 +1,127 @@
-# AI Task Manager
+# 🤖 AI Task Manager
 
-An intelligent task management system built with Django (backend) and React (frontend), featuring AI-powered task assistance and recommendations.
+A modern, full-stack task management application with AI-powered suggestions, dark mode support, and beautiful animations.
 
-## Features
+![AI Task Manager Demo](https://img.shields.io/badge/Demo-Live-brightgreen)
+![Django](https://img.shields.io/badge/Django-5.2.5-green)
+![React](https://img.shields.io/badge/React-18.x-blue)
+![Docker](https://img.shields.io/badge/Docker-Compose-blue)
 
-- **Task Management**: Create, update, delete, and organize tasks
-- **AI Assistant**: Get intelligent suggestions and help with your tasks
-- **User Authentication**: Secure login/registration system  
-- **Priority & Status Management**: Organize tasks by priority and status
-- **Tag System**: Categorize tasks with custom tags
-- **Real-time Updates**: Live updates using WebSockets
-- **Responsive Design**: Works on desktop and mobile devices
+## ✨ Features
+
+### 🎯 Core Functionality
+- **Task Management**: Create, edit, delete, and organize tasks
+- **Priority Levels**: Urgent, High, Medium, Low priority settings
+- **Status Tracking**: Todo, In Progress, Completed status
+- **Due Dates**: Set and track task deadlines
+- **Tags**: Organize tasks with custom tags
+- **Search & Filter**: Advanced filtering by status, priority, and text search
+
+### 🤖 AI Integration
+- **Claude AI Suggestions**: Get intelligent task recommendations powered by Anthropic Claude
+- **Context-Aware**: AI understands your task context and provides relevant suggestions
+- **Real-time Responses**: Instant AI-powered insights and task assistance
+
+### 🎨 Modern UI/UX
+- **Dark Mode**: Beautiful dark/light theme toggle with system preference detection
+- **Smooth Animations**: Polished micro-interactions and transitions throughout the app
+- **Responsive Design**: Works perfectly on desktop and mobile devices
+- **Modern Design**: Clean, intuitive interface with glassmorphism effects
+
+### 🔐 Authentication & Security
+- **User Authentication**: Secure login and registration system
+- **Token-based Auth**: JWT authentication for API security
+- **Protected Routes**: Client-side route protection
 
 ## Tech Stack
 
 ### Backend
-- Django 4.2+ with Django REST Framework
-- PostgreSQL database
-- Redis for caching and WebSocket support
-- Celery for background tasks
-- OpenAI API integration for AI features
+- **Django 5.2.5**: Web framework with Django REST Framework
+- **PostgreSQL**: Primary database for data persistence
+- **Redis**: Caching and session storage
+- **Anthropic Claude**: AI integration for intelligent suggestions
 
 ### Frontend
-- React 18+ with modern hooks
-- React Router for navigation
-- React Query for state management
-- Styled Components for styling
-- Axios for API communication
+- **React 18**: Modern UI framework with hooks
+- **React Query**: Server state management and caching
+- **Styled Components**: CSS-in-JS styling with theme support
+- **React Router**: Client-side routing
+- **Lucide React**: Beautiful, customizable icons
+
+### DevOps
+- **Docker & Docker Compose**: Containerization for easy deployment
+- **PostgreSQL**: Robust relational database
+- **Redis**: High-performance caching layer
+- **Nginx**: Production web server (configured)
 
 ## Quick Start
 
 ### Prerequisites
-- Docker and Docker Compose
-- Git
+- [Docker](https://www.docker.com/get-started) and Docker Compose
+- [Git](https://git-scm.com/)
+- [Claude API Key](https://anthropic.com/) (optional, for AI features)
 
-### Installation
+### 1. Clone the Repository
+```bash
+git clone https://github.com/yourusername/ai-task-manager.git
+cd ai-task-manager
+```
 
-1. **Clone the repository**
-   ```bash
-   git clone <repository-url>
-   cd ai-task-manager
-   ```
+### 2. Environment Setup
+Create a `.env` file in the root directory:
+```bash
+# Database Configuration
+DB_NAME=taskmanager
+DB_USER=postgres
+DB_PASSWORD=postgres
+DB_HOST=db
+DB_PORT=5432
 
-2. **Set up environment variables**
-   ```bash
-   cp .env.example .env
-   # Edit .env with your configuration
-   ```
+# Django Configuration
+SECRET_KEY=your-super-secret-key-change-in-production
+DEBUG=True
+ALLOWED_HOSTS=localhost,127.0.0.1,backend
 
-3. **Start with Docker Compose**
-   ```bash
-   docker-compose up --build
-   ```
+# API Keys
+CLAUDE_API_KEY=your-claude-api-key-here
+GITHUB_TOKEN=your-github-token-here
 
-4. **Access the application**
-   - Frontend: http://localhost:3000
-   - Backend API: http://localhost:8000
-   - Admin Panel: http://localhost:8000/admin
+# Redis Configuration
+REDIS_URL=redis://redis:6379/0
+
+# Frontend Configuration
+REACT_APP_API_URL=http://localhost:8000
+REACT_APP_WS_URL=ws://localhost:8000
+
+# Port Configuration
+BACKEND_PORT=8000
+FRONTEND_PORT=3000
+DB_PORT=5432
+REDIS_PORT=6379
+
+# Production Settings (for deployment)
+PRODUCTION=False
+DOMAIN=localhost
+```
+
+### 3. Start the Application
+```bash
+# Start all services
+docker-compose up --build
+
+# Or run in background
+docker-compose up -d --build
+```
+
+### 4. Access the Application
+- **Frontend**: http://localhost:3000
+- **Backend API**: http://localhost:8000
+- **Admin Panel**: http://localhost:8000/admin
+
+### 5. Create a Superuser (Optional)
+```bash
+docker-compose exec backend python manage.py createsuperuser
+```
 
 ### Manual Setup (Development)
 
@@ -109,7 +174,7 @@ npm start
 | `DB_NAME` | Database name | `ai_task_manager` |
 | `DB_USER` | Database user | `postgres` |
 | `DB_PASSWORD` | Database password | `postgres` |
-| `OPENAI_API_KEY` | OpenAI API key for AI features | Required |
+| `CLAUDE_API_KEY` | Anthropic Claude API key for AI features | Required for AI features |
 | `REACT_APP_API_URL` | Backend API URL | `http://localhost:8000` |
 
 ## Development
@@ -142,23 +207,24 @@ python manage.py createsuperuser
 
 ```
 ai-task-manager/
-├── backend/                 # Django backend
-│   ├── apps/
-│   │   ├── tasks/          # Task management app
-│   │   ├── users/          # User management app
-│   │   └── ai_assistant/   # AI integration app
-│   ├── taskmanager/        # Main Django project
-│   └── requirements.txt
-├── frontend/               # React frontend
-│   ├── public/
+├── backend/                 # Django API
+│   ├── apps/               # Django apps
+│   │   ├── accounts/       # User authentication
+│   │   └── tasks/          # Task management & AI integration
+│   ├── taskmanager/        # Project settings
+│   └── requirements.txt    # Python dependencies
+├── frontend/               # React application
 │   ├── src/
 │   │   ├── components/     # Reusable components
-│   │   ├── pages/         # Page components
-│   │   ├── contexts/      # React contexts
-│   │   └── services/      # API services
-│   └── package.json
-├── docker-compose.yml     # Docker services
-└── README.md
+│   │   ├── contexts/       # React contexts (Auth, Theme)
+│   │   ├── pages/          # Page components
+│   │   ├── services/       # API services
+│   │   └── utils/          # Utility functions
+│   └── package.json        # Node.js dependencies
+├── docker-compose.yml      # Docker services
+├── .env                    # Environment variables
+├── .gitignore             # Git ignore rules
+└── README.md              # This file
 ```
 
 ## Contributing

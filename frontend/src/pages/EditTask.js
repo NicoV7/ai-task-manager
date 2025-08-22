@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import { useMutation, useQueryClient, useQuery } from 'react-query';
 import { tasksAPI, tagsAPI } from '../services/api';
 import { extractTagsFromResponse } from '../utils/tasks';
@@ -64,42 +64,52 @@ const FormRow = styled.div`
 const TextArea = styled.textarea`
   width: 100%;
   padding: 12px;
-  border: 1px solid #d1d5db;
+  border: 1px solid var(--color-border);
   border-radius: 6px;
   resize: vertical;
   min-height: 120px;
   font-family: inherit;
   font-size: 14px;
+  background: var(--color-surface);
+  color: var(--color-text);
+  transition: all 0.3s ease;
 
   &:focus {
     outline: none;
-    border-color: #3182ce;
+    border-color: var(--color-primary);
     box-shadow: 0 0 0 3px rgba(49, 130, 206, 0.1);
+  }
+  
+  &::placeholder {
+    color: var(--color-text-muted);
   }
 `;
 
 const Select = styled.select`
   width: 100%;
   padding: 12px;
-  border: 1px solid #d1d5db;
+  border: 1px solid var(--color-border);
   border-radius: 6px;
-  background: white;
+  background: var(--color-surface);
+  color: var(--color-text);
   font-size: 14px;
+  transition: all 0.3s ease;
 
   &:focus {
     outline: none;
-    border-color: #3182ce;
+    border-color: var(--color-primary);
     box-shadow: 0 0 0 3px rgba(49, 130, 206, 0.1);
   }
 `;
 
 const ErrorMessage = styled.div`
-  color: #e53e3e;
+  color: var(--color-error);
   margin-bottom: 20px;
   padding: 12px;
-  background: #fed7d7;
+  background: var(--color-error-bg);
   border-radius: 6px;
   font-size: 14px;
+  animation: slideInDown 0.3s ease-out;
 `;
 
 const Actions = styled.div`
@@ -108,7 +118,8 @@ const Actions = styled.div`
   margin-top: 30px;
 `;
 
-function CreateTask() {
+function EditTask() {
+  const { id } = useParams();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   
@@ -122,6 +133,30 @@ function CreateTask() {
   });
   const [error, setError] = useState('');
 
+  // Fetch task data
+  const { data: task, isLoading: taskLoading } = useQuery(
+    ['task', id],
+    () => tasksAPI.getTask(id).then(res => res.data),
+    {
+      onSuccess: (taskData) => {
+        // Format due_date for datetime-local input
+        const formattedDueDate = taskData.due_date 
+          ? new Date(taskData.due_date).toISOString().slice(0, 16)
+          : '';
+        
+        setFormData({
+          title: taskData.title || '',
+          description: taskData.description || '',
+          priority: taskData.priority || 'medium',
+          status: taskData.status || 'todo',
+          due_date: formattedDueDate,
+          tag_ids: taskData.tags ? taskData.tags.map(tag => tag.id) : []
+        });
+      }
+    }
+  );
+
+  // Fetch tags
   const { data: tagsResponse } = useQuery('tags', () =>
     tagsAPI.getTags().then(res => res.data)
   );
@@ -129,15 +164,16 @@ function CreateTask() {
   // Safely extract tags from API response
   const tags = extractTagsFromResponse(tagsResponse);
 
-  const createMutation = useMutation(
-    (taskData) => tasksAPI.createTask(taskData),
+  const updateMutation = useMutation(
+    (taskData) => tasksAPI.updateTask(id, taskData),
     {
       onSuccess: (data) => {
         queryClient.invalidateQueries('tasks');
-        navigate(`/tasks/${data.data.id}`);
+        queryClient.invalidateQueries(['task', id]);
+        navigate(`/tasks/${id}`);
       },
       onError: (error) => {
-        setError(error.response?.data?.detail || 'Failed to create task');
+        setError(error.response?.data?.detail || 'Failed to update task');
       }
     }
   );
@@ -157,7 +193,7 @@ function CreateTask() {
       tag_ids: formData.tag_ids.filter(Boolean)
     };
 
-    createMutation.mutate(taskData);
+    updateMutation.mutate(taskData);
   };
 
   const handleChange = (e) => {
@@ -176,14 +212,22 @@ function CreateTask() {
     }));
   };
 
+  if (taskLoading) {
+    return <div>Loading task...</div>;
+  }
+
+  if (!task) {
+    return <div>Task not found</div>;
+  }
+
   return (
-    <div>
-      <Header>
-        <BackButton onClick={() => navigate('/tasks')}>
+    <div className="animate-fade-in">
+      <Header className="animate-slide-up">
+        <BackButton onClick={() => navigate(`/tasks/${id}`)}>
           <ArrowLeft size={18} />
-          Back to Tasks
+          Back to Task
         </BackButton>
-        <Title>Create New Task</Title>
+        <Title>Edit Task</Title>
       </Header>
 
       <FormCard>
@@ -265,15 +309,15 @@ function CreateTask() {
             <button
               type="submit"
               className="btn btn-primary"
-              disabled={createMutation.isLoading}
+              disabled={updateMutation.isLoading}
             >
-              {createMutation.isLoading ? 'Creating...' : 'Create Task'}
+              {updateMutation.isLoading ? 'Updating...' : 'Update Task'}
             </button>
             
             <button
               type="button"
               className="btn btn-secondary"
-              onClick={() => navigate('/tasks')}
+              onClick={() => navigate(`/tasks/${id}`)}
             >
               Cancel
             </button>
@@ -284,4 +328,4 @@ function CreateTask() {
   );
 }
 
-export default CreateTask;
+export default EditTask;

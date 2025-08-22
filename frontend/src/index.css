@@ -1,3 +1,98 @@
+/* CSS Custom Properties for Light and Dark Themes */
+:root {
+  /* Light theme (default) */
+  --color-primary: #3182ce;
+  --color-primary-hover: #2c5aa0;
+  --color-secondary: #e2e8f0;
+  --color-secondary-hover: #cbd5e0;
+  
+  --color-background: #f8fafc;
+  --color-surface: #ffffff;
+  --color-surface-hover: #f8fafc;
+  
+  --color-text: #1a202c;
+  --color-text-secondary: #4a5568;
+  --color-text-muted: #6b7280;
+  
+  --color-border: #e2e8f0;
+  --color-border-light: #f1f5f9;
+  
+  --color-success: #16a34a;
+  --color-success-bg: #dcfce7;
+  --color-warning: #d69e2e;
+  --color-warning-bg: #fef3c7;
+  --color-error: #dc2626;
+  --color-error-bg: #fecaca;
+  
+  --shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  --shadow-hover: 0 4px 6px rgba(0, 0, 0, 0.1);
+  
+  /* Status colors for light theme */
+  --status-todo-bg: #e2e8f0;
+  --status-todo-text: #4a5568;
+  --status-progress-bg: #fef3c7;
+  --status-progress-text: #d69e2e;
+  --status-completed-bg: #dcfce7;
+  --status-completed-text: #16a34a;
+  
+  /* Priority colors for light theme */
+  --priority-urgent-bg: #fecaca;
+  --priority-urgent-text: #dc2626;
+  --priority-high-bg: #fed7aa;
+  --priority-high-text: #ea580c;
+  --priority-medium-bg: #fef3c7;
+  --priority-medium-text: #d69e2e;
+  --priority-low-bg: #dcfce7;
+  --priority-low-text: #16a34a;
+}
+
+/* Dark theme */
+[data-theme="dark"] {
+  --color-primary: #60a5fa;
+  --color-primary-hover: #3b82f6;
+  --color-secondary: #374151;
+  --color-secondary-hover: #4b5563;
+  
+  --color-background: #111827;
+  --color-surface: #1f2937;
+  --color-surface-hover: #374151;
+  
+  --color-text: #f9fafb;
+  --color-text-secondary: #d1d5db;
+  --color-text-muted: #9ca3af;
+  
+  --color-border: #374151;
+  --color-border-light: #4b5563;
+  
+  --color-success: #34d399;
+  --color-success-bg: #064e3b;
+  --color-warning: #fbbf24;
+  --color-warning-bg: #78350f;
+  --color-error: #f87171;
+  --color-error-bg: #7f1d1d;
+  
+  --shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+  --shadow-hover: 0 4px 6px rgba(0, 0, 0, 0.4);
+  
+  /* Status colors for dark theme */
+  --status-todo-bg: #374151;
+  --status-todo-text: #d1d5db;
+  --status-progress-bg: #78350f;
+  --status-progress-text: #fbbf24;
+  --status-completed-bg: #064e3b;
+  --status-completed-text: #34d399;
+  
+  /* Priority colors for dark theme */
+  --priority-urgent-bg: #7f1d1d;
+  --priority-urgent-text: #f87171;
+  --priority-high-bg: #9a3412;
+  --priority-high-text: #fb923c;
+  --priority-medium-bg: #78350f;
+  --priority-medium-text: #fbbf24;
+  --priority-low-bg: #064e3b;
+  --priority-low-text: #34d399;
+}
+
 * {
   box-sizing: border-box;
   margin: 0;
@@ -10,8 +105,9 @@ body {
     sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  background-color: #f8fafc;
-  color: #1a202c;
+  background-color: var(--color-background);
+  color: var(--color-text);
+  transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 code {
@@ -32,28 +128,69 @@ code {
   cursor: pointer;
   font-size: 14px;
   font-weight: 500;
-  transition: all 0.2s;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   display: inline-flex;
   align-items: center;
   gap: 8px;
+  position: relative;
+  overflow: hidden;
+  transform: translateY(0);
+}
+
+.btn::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.1),
+    transparent
+  );
+  transition: left 0.5s ease;
+}
+
+.btn:hover::before {
+  left: 100%;
+}
+
+.btn:active {
+  transform: translateY(1px);
 }
 
 .btn-primary {
-  background-color: #3182ce;
+  background-color: var(--color-primary);
   color: white;
 }
 
 .btn-primary:hover {
-  background-color: #2c5aa0;
+  background-color: var(--color-primary-hover);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(49, 130, 206, 0.3);
+}
+
+.btn-primary:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }
 
 .btn-secondary {
-  background-color: #e2e8f0;
-  color: #4a5568;
+  background-color: var(--color-secondary);
+  color: var(--color-text-secondary);
 }
 
 .btn-secondary:hover {
-  background-color: #cbd5e0;
+  background-color: var(--color-secondary-hover);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-hover);
+}
+
+.btn-secondary:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }
 
 .form-group {
@@ -64,28 +201,177 @@ code {
   display: block;
   margin-bottom: 5px;
   font-weight: 500;
-  color: #374151;
+  color: var(--color-text-secondary);
 }
 
 .form-input {
   width: 100%;
   padding: 10px 12px;
-  border: 1px solid #d1d5db;
+  border: 1px solid var(--color-border);
   border-radius: 6px;
   font-size: 14px;
-  transition: border-color 0.2s;
+  background-color: var(--color-surface);
+  color: var(--color-text);
+  transition: border-color 0.3s ease, box-shadow 0.3s ease, background-color 0.3s ease;
 }
 
 .form-input:focus {
   outline: none;
-  border-color: #3182ce;
+  border-color: var(--color-primary);
   box-shadow: 0 0 0 3px rgba(49, 130, 206, 0.1);
 }
 
 .card {
-  background: white;
+  background: var(--color-surface);
   border-radius: 8px;
-  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+  box-shadow: var(--shadow);
   padding: 24px;
   margin-bottom: 20px;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  transform: translateY(0);
+  will-change: transform, box-shadow;
+}
+
+.card:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-hover);
+}
+
+.card-interactive {
+  cursor: pointer;
+}
+
+.card-interactive:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+}
+
+[data-theme="dark"] .card-interactive:hover {
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.4);
+}
+
+/* Loading and error states */
+.loading {
+  color: var(--color-text-muted);
+  text-align: center;
+  padding: 40px;
+  animation: pulse 2s ease-in-out infinite;
+}
+
+.error {
+  color: var(--color-error);
+  background-color: var(--color-error-bg);
+  padding: 12px;
+  border-radius: 6px;
+  margin-bottom: 20px;
+  animation: slideInDown 0.3s ease-out;
+}
+
+/* Keyframe animations */
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+@keyframes slideInDown {
+  from {
+    transform: translateY(-10px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes slideInUp {
+  from {
+    transform: translateY(20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes fadeInScale {
+  from {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* Animation utility classes */
+.animate-fade-in {
+  animation: fadeIn 0.3s ease-out;
+}
+
+.animate-slide-up {
+  animation: slideInUp 0.4s ease-out;
+}
+
+.animate-fade-scale {
+  animation: fadeInScale 0.3s ease-out;
+}
+
+.animate-delay-100 {
+  animation-delay: 0.1s;
+}
+
+.animate-delay-200 {
+  animation-delay: 0.2s;
+}
+
+.animate-delay-300 {
+  animation-delay: 0.3s;
+}
+
+/* Stagger animation for lists */
+.stagger-children > * {
+  animation: slideInUp 0.4s ease-out both;
+}
+
+.stagger-children > *:nth-child(1) { animation-delay: 0.1s; }
+.stagger-children > *:nth-child(2) { animation-delay: 0.2s; }
+.stagger-children > *:nth-child(3) { animation-delay: 0.3s; }
+.stagger-children > *:nth-child(4) { animation-delay: 0.4s; }
+.stagger-children > *:nth-child(5) { animation-delay: 0.5s; }
+.stagger-children > *:nth-child(6) { animation-delay: 0.6s; }
+.stagger-children > *:nth-child(7) { animation-delay: 0.7s; }
+.stagger-children > *:nth-child(8) { animation-delay: 0.8s; }
+
+/* Focus and interaction animations */
+.form-input:focus,
+.btn:focus {
+  animation: focusPulse 0.3s ease-out;
+}
+
+@keyframes focusPulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(49, 130, 206, 0.4);
+  }
+  70% {
+    box-shadow: 0 0 0 6px rgba(49, 130, 206, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(49, 130, 206, 0);
+  }
 }

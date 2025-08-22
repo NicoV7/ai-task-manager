@@ -18,12 +18,17 @@ const BackButton = styled.button`
   gap: 8px;
   background: none;
   border: none;
-  color: #6b7280;
+  color: var(--color-text-muted);
   cursor: pointer;
   font-size: 14px;
+  transition: all 0.3s ease;
+  border-radius: 6px;
+  padding: 8px 12px;
   
   &:hover {
-    color: #374151;
+    color: var(--color-text);
+    background: var(--color-surface-hover);
+    transform: translateX(-2px);
   }
 `;
 
@@ -38,11 +43,18 @@ const Actions = styled.div`
 `;
 
 const TaskCard = styled.div`
-  background: white;
+  background: var(--color-surface);
   border-radius: 8px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  box-shadow: var(--shadow);
   padding: 30px;
   margin-bottom: 20px;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  animation: fadeInScale 0.4s ease-out;
+  
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-hover);
+  }
 `;
 
 const StatusBadge = styled.span`
@@ -51,19 +63,37 @@ const StatusBadge = styled.span`
   font-size: 14px;
   font-weight: 500;
   text-transform: uppercase;
+  transition: all 0.3s ease;
+  animation: fadeIn 0.4s ease-out;
   
   ${props => {
     switch (props.status) {
       case 'todo':
-        return 'background: #e2e8f0; color: #4a5568;';
+        return `
+          background: var(--status-todo-bg);
+          color: var(--status-todo-text);
+        `;
       case 'in_progress':
-        return 'background: #fef3c7; color: #d69e2e;';
+        return `
+          background: var(--status-progress-bg);
+          color: var(--status-progress-text);
+        `;
       case 'completed':
-        return 'background: #dcfce7; color: #16a34a;';
+        return `
+          background: var(--status-completed-bg);
+          color: var(--status-completed-text);
+        `;
       default:
-        return 'background: #e2e8f0; color: #4a5568;';
+        return `
+          background: var(--status-todo-bg);
+          color: var(--status-todo-text);
+        `;
     }
   }}
+  
+  &:hover {
+    transform: scale(1.05);
+  }
 `;
 
 const PriorityBadge = styled.span`
@@ -72,21 +102,42 @@ const PriorityBadge = styled.span`
   font-size: 14px;
   font-weight: 500;
   margin-left: 12px;
+  transition: all 0.3s ease;
+  animation: fadeIn 0.4s ease-out 0.1s both;
   
   ${props => {
     switch (props.priority) {
       case 'urgent':
-        return 'background: #fecaca; color: #dc2626;';
+        return `
+          background: var(--priority-urgent-bg);
+          color: var(--priority-urgent-text);
+        `;
       case 'high':
-        return 'background: #fed7aa; color: #ea580c;';
+        return `
+          background: var(--priority-high-bg);
+          color: var(--priority-high-text);
+        `;
       case 'medium':
-        return 'background: #fef3c7; color: #d69e2e;';
+        return `
+          background: var(--priority-medium-bg);
+          color: var(--priority-medium-text);
+        `;
       case 'low':
-        return 'background: #dcfce7; color: #16a34a;';
+        return `
+          background: var(--priority-low-bg);
+          color: var(--priority-low-text);
+        `;
       default:
-        return 'background: #e2e8f0; color: #4a5568;';
+        return `
+          background: var(--status-todo-bg);
+          color: var(--status-todo-text);
+        `;
     }
   }}
+  
+  &:hover {
+    transform: scale(1.05);
+  }
 `;
 
 const TaskMeta = styled.div`
@@ -102,37 +153,62 @@ const Description = styled.div`
 `;
 
 const AISection = styled.div`
-  background: #f8fafc;
+  background: var(--color-background);
   border-radius: 8px;
   padding: 20px;
   margin-top: 20px;
+  border: 1px solid var(--color-border);
+  transition: all 0.3s ease;
 `;
 
 const AITitle = styled.h3`
   margin: 0 0 15px 0;
-  color: #1a202c;
+  color: var(--color-text);
   display: flex;
   align-items: center;
   gap: 8px;
+  transition: color 0.3s ease;
 `;
 
 const AIInput = styled.textarea`
   width: 100%;
   padding: 12px;
-  border: 1px solid #d1d5db;
+  border: 1px solid var(--color-border);
   border-radius: 6px;
   resize: vertical;
   min-height: 100px;
+  background-color: var(--color-surface);
+  color: var(--color-text);
+  transition: all 0.3s ease;
+  
+  &:focus {
+    outline: none;
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 3px rgba(49, 130, 206, 0.1);
+  }
+  
+  &::placeholder {
+    color: var(--color-text-muted);
+  }
 `;
 
 const AIResponse = styled.div`
-  background: white;
-  border: 1px solid #e5e7eb;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
   border-radius: 6px;
-  padding: 15px;
-  margin-top: 10px;
+  padding: 20px;
+  margin-top: 15px;
   white-space: pre-wrap;
-  line-height: 1.5;
+  line-height: 1.6;
+  color: var(--color-text);
+  transition: all 0.3s ease;
+  box-shadow: var(--shadow);
+  
+  ${props => props.isError && `
+    background: var(--color-error-bg);
+    border-color: var(--color-error);
+    color: var(--color-error);
+  `}
 `;
 
 function TaskDetail() {
@@ -162,6 +238,11 @@ function TaskDetail() {
     {
       onSuccess: (data) => {
         setAiResponse(data.data.ai_response);
+        setAiMessage(''); // Clear the input after successful submission
+      },
+      onError: (error) => {
+        const errorMessage = error.response?.data?.error || 'Failed to get AI suggestion. Please try again.';
+        setAiResponse(`Error: ${errorMessage}`);
       }
     }
   );
@@ -188,15 +269,18 @@ function TaskDetail() {
   }
 
   return (
-    <div>
-      <Header>
+    <div className="animate-fade-in">
+      <Header className="animate-slide-up">
         <BackButton onClick={() => navigate('/tasks')}>
           <ArrowLeft size={18} />
           Back to Tasks
         </BackButton>
         <Title>{task.title}</Title>
         <Actions>
-          <button className="btn btn-secondary">
+          <button 
+            className="btn btn-secondary"
+            onClick={() => navigate(`/tasks/${id}/edit`)}
+          >
             <Edit size={16} />
             Edit
           </button>
@@ -258,7 +342,7 @@ function TaskDetail() {
         </form>
 
         {aiResponse && (
-          <AIResponse>
+          <AIResponse isError={aiResponse.startsWith('Error:')}>
             {aiResponse}
           </AIResponse>
         )}
