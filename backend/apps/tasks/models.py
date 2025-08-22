@@ -19,6 +19,7 @@ class Task(models.Model):
 
     title = models.CharField(max_length=200)
     description = models.TextField(blank=True)
+    notes = models.TextField(blank=True, help_text="Task notes and AI conversation history")
     priority = models.CharField(max_length=10, choices=PRIORITY_CHOICES, default='medium')
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='todo')
     due_date = models.DateTimeField(null=True, blank=True)

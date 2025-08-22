@@ -3,6 +3,7 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from django.shortcuts import get_object_or_404
+from django.utils import timezone
 import logging
 from .models import Task, Tag, AIAssistantInteraction
 from .serializers import TaskSerializer, TagSerializer, AIAssistantInteractionSerializer
@@ -49,6 +50,20 @@ class TaskViewSet(viewsets.ModelViewSet):
                 user_message=user_message,
                 ai_response=ai_response
             )
+            
+            # Append the conversation to task notes with timestamp
+            timestamp = timezone.now().strftime('%Y-%m-%d %H:%M:%S')
+            conversation_entry = f"\n\n--- AI Conversation ({timestamp}) ---\n"
+            conversation_entry += f"You: {user_message}\n"
+            conversation_entry += f"AI: {ai_response}\n"
+            conversation_entry += "--- End of Conversation ---"
+            
+            # Update task notes
+            if task.notes:
+                task.notes += conversation_entry
+            else:
+                task.notes = conversation_entry.strip()
+            task.save()
             
             logger.info(f"AI suggestion generated for task {task.id} by user {request.user.id}")
             

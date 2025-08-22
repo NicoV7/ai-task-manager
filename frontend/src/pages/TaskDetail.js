@@ -211,6 +211,27 @@ const AIResponse = styled.div`
   `}
 `;
 
+const ConversationHistory = styled.div`
+  background: var(--color-background);
+  border: 1px solid var(--color-border);
+  border-radius: 6px;
+  padding: 20px;
+  margin-top: 20px;
+  max-height: 400px;
+  overflow-y: auto;
+  white-space: pre-wrap;
+  line-height: 1.6;
+  color: var(--color-text);
+  transition: all 0.3s ease;
+`;
+
+const ConversationTitle = styled.h4`
+  margin: 0 0 15px 0;
+  color: var(--color-text);
+  font-size: 16px;
+  font-weight: 600;
+`;
+
 function TaskDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -239,6 +260,8 @@ function TaskDetail() {
       onSuccess: (data) => {
         setAiResponse(data.data.ai_response);
         setAiMessage(''); // Clear the input after successful submission
+        // Refresh task data to get updated notes
+        queryClient.invalidateQueries(['task', id]);
       },
       onError: (error) => {
         const errorMessage = error.response?.data?.error || 'Failed to get AI suggestion. Please try again.';
@@ -345,6 +368,15 @@ function TaskDetail() {
           <AIResponse isError={aiResponse.startsWith('Error:')}>
             {aiResponse}
           </AIResponse>
+        )}
+
+        {task.notes && (
+          <div>
+            <ConversationTitle>Conversation History</ConversationTitle>
+            <ConversationHistory>
+              {task.notes}
+            </ConversationHistory>
+          </div>
         )}
       </AISection>
     </div>
