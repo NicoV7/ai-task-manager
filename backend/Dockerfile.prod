@@ -36,8 +36,8 @@ RUN adduser --disabled-password --gecos '' appuser \
     && chown -R appuser:appuser /app
 USER appuser
 
-# Expose port
-EXPOSE 8000
+# Expose port (Render will set PORT env var)
+EXPOSE $PORT
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
@@ -46,16 +46,13 @@ HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
 # Production command
 CMD ["sh", "-c", "\
     set -e && \
-    echo 'Waiting for database...' && \
-    while ! nc -z db 5432; do sleep 1; done && \
-    echo 'Database is ready!' && \
     echo 'Running migrations...' && \
     python manage.py migrate --noinput && \
     echo 'Collecting static files...' && \
     python manage.py collectstatic --noinput && \
     echo 'Starting Gunicorn server...' && \
     gunicorn taskmanager.wsgi:application \
-        --bind 0.0.0.0:8000 \
+        --bind 0.0.0.0:$PORT \
         --workers ${GUNICORN_WORKERS:-4} \
         --worker-connections ${GUNICORN_CONNECTIONS:-1000} \
         --max-requests 1000 \
