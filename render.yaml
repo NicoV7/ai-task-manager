@@ -2,7 +2,6 @@ services:
   # PostgreSQL Database
   - type: pserv
     name: taskmanager-db
-    env: static
     plan: starter
     databaseName: taskmanager
     user: taskmanager_user
@@ -10,14 +9,12 @@ services:
   # Redis Cache
   - type: redis
     name: taskmanager-redis
-    env: static
     plan: starter
     ipAllowList: []
 
   # Django Backend API
   - type: web
     name: taskmanager-backend
-    env: docker
     dockerfilePath: ./backend/Dockerfile.prod
     plan: starter
     buildCommand: ""
