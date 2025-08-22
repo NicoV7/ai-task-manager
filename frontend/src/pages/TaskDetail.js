@@ -2,8 +2,9 @@ import React, { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from 'react-query';
 import { tasksAPI } from '../services/api';
-import { Edit, Trash2, MessageCircle, ArrowLeft } from 'lucide-react';
+import { Edit, Trash2, MessageCircle, ArrowLeft, Layers, Plus } from 'lucide-react';
 import styled from 'styled-components';
+import TaskHierarchy from '../components/TaskHierarchy';
 
 const Header = styled.div`
   display: flex;
@@ -232,12 +233,98 @@ const ConversationTitle = styled.h4`
   font-weight: 600;
 `;
 
+const BreakdownSection = styled.div`
+  background: var(--color-background);
+  border-radius: 8px;
+  padding: 20px;
+  margin: 20px 0;
+  border: 1px solid var(--color-border);
+  transition: all 0.3s ease;
+`;
+
+const BreakdownTitle = styled.h3`
+  margin: 0 0 15px 0;
+  color: var(--color-text);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transition: color 0.3s ease;
+`;
+
+const BreakdownActions = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 20px;
+`;
+
+const CreateSubtaskForm = styled.form`
+  background: var(--color-surface);
+  border-radius: 6px;
+  padding: 15px;
+  margin-top: 15px;
+  border: 1px solid var(--color-border);
+`;
+
+const SubtaskInput = styled.input`
+  width: 100%;
+  padding: 12px;
+  border: 1px solid var(--color-border);
+  border-radius: 6px;
+  background-color: var(--color-surface);
+  color: var(--color-text);
+  margin-bottom: 10px;
+  transition: all 0.3s ease;
+  
+  &:focus {
+    outline: none;
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 3px rgba(49, 130, 206, 0.1);
+  }
+  
+  &::placeholder {
+    color: var(--color-text-muted);
+  }
+`;
+
+const SubtaskTextarea = styled.textarea`
+  width: 100%;
+  padding: 12px;
+  border: 1px solid var(--color-border);
+  border-radius: 6px;
+  background-color: var(--color-surface);
+  color: var(--color-text);
+  margin-bottom: 10px;
+  min-height: 80px;
+  resize: vertical;
+  transition: all 0.3s ease;
+  
+  &:focus {
+    outline: none;
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 3px rgba(49, 130, 206, 0.1);
+  }
+  
+  &::placeholder {
+    color: var(--color-text-muted);
+  }
+`;
+
+const SubtaskFormActions = styled.div`
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+`;
+
 function TaskDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [aiMessage, setAiMessage] = useState('');
   const [aiResponse, setAiResponse] = useState('');
+  const [showCreateSubtask, setShowCreateSubtask] = useState(false);
+  const [subtaskTitle, setSubtaskTitle] = useState('');
+  const [subtaskDescription, setSubtaskDescription] = useState('');
 
   const { data: task, isLoading } = useQuery(
     ['task', id],
@@ -270,6 +357,51 @@ function TaskDetail() {
     }
   );
 
+  const breakdownMutation = useMutation(
+    () => tasksAPI.breakdownTask(id),
+    {
+      onSuccess: () => {
+        // Refresh task data to get new subtasks
+        queryClient.invalidateQueries(['task', id]);
+        queryClient.invalidateQueries('tasks');
+      },
+      onError: (error) => {
+        const errorMessage = error.response?.data?.error || 'Failed to break down task. Please try again.';
+        alert(errorMessage);
+      }
+    }
+  );
+
+  const createSubtaskMutation = useMutation(
+    (subtaskData) => tasksAPI.createTask(subtaskData),
+    {
+      onSuccess: () => {
+        // Refresh task data to get new subtasks
+        queryClient.invalidateQueries(['task', id]);
+        queryClient.invalidateQueries('tasks');
+        // Reset form
+        setSubtaskTitle('');
+        setSubtaskDescription('');
+        setShowCreateSubtask(false);
+      },
+      onError: (error) => {
+        const errorMessage = error.response?.data?.error || 'Failed to create subtask. Please try again.';
+        alert(errorMessage);
+      }
+    }
+  );
+
+  const deleteSubtaskMutation = useMutation(
+    (subtaskId) => tasksAPI.deleteTask(subtaskId),
+    {
+      onSuccess: () => {
+        // Refresh task data to remove deleted subtask
+        queryClient.invalidateQueries(['task', id]);
+        queryClient.invalidateQueries('tasks');
+      }
+    }
+  );
+
   const handleDelete = () => {
     if (window.confirm('Are you sure you want to delete this task?')) {
       deleteMutation.mutate();
@@ -281,6 +413,34 @@ function TaskDetail() {
     if (aiMessage.trim()) {
       aiSuggestionMutation.mutate(aiMessage.trim());
     }
+  };
+
+  const handleBreakdown = () => {
+    if (task.subtasks && task.subtasks.length > 0) {
+      if (window.confirm('This task already has subtasks. Delete them first to regenerate?')) {
+        // Note: In a full implementation, we'd add a clear subtasks endpoint
+        alert('Please delete existing subtasks manually first, then try again.');
+      }
+    } else {
+      breakdownMutation.mutate();
+    }
+  };
+
+  const handleCreateSubtask = (e) => {
+    e.preventDefault();
+    if (subtaskTitle.trim()) {
+      createSubtaskMutation.mutate({
+        title: subtaskTitle.trim(),
+        description: subtaskDescription.trim(),
+        parent_task: parseInt(id),
+        priority: 'medium',
+        status: 'todo'
+      });
+    }
+  };
+
+  const handleDeleteSubtask = (subtaskId) => {
+    deleteSubtaskMutation.mutate(subtaskId);
   };
 
   if (isLoading) {
@@ -342,6 +502,76 @@ function TaskDetail() {
           </div>
         )}
       </TaskCard>
+
+      {/* Task Hierarchy Section */}
+      <TaskHierarchy 
+        task={task} 
+        onDeleteSubtask={handleDeleteSubtask}
+      />
+
+      {/* Task Breakdown Section */}
+      <BreakdownSection>
+        <BreakdownTitle>
+          <Layers size={20} />
+          Task Breakdown
+        </BreakdownTitle>
+        
+        <BreakdownActions>
+          <button 
+            className="btn btn-primary"
+            onClick={handleBreakdown}
+            disabled={breakdownMutation.isLoading}
+          >
+            <Layers size={16} />
+            {breakdownMutation.isLoading ? 'Breaking down...' : 'AI Breakdown'}
+          </button>
+          
+          <button 
+            className="btn btn-secondary"
+            onClick={() => setShowCreateSubtask(!showCreateSubtask)}
+          >
+            <Plus size={16} />
+            Create Subtask
+          </button>
+        </BreakdownActions>
+
+        {showCreateSubtask && (
+          <CreateSubtaskForm onSubmit={handleCreateSubtask}>
+            <SubtaskInput
+              type="text"
+              value={subtaskTitle}
+              onChange={(e) => setSubtaskTitle(e.target.value)}
+              placeholder="Subtask title..."
+              required
+            />
+            <SubtaskTextarea
+              value={subtaskDescription}
+              onChange={(e) => setSubtaskDescription(e.target.value)}
+              placeholder="Subtask description (optional)..."
+            />
+            <SubtaskFormActions>
+              <button 
+                type="button" 
+                className="btn btn-secondary"
+                onClick={() => {
+                  setShowCreateSubtask(false);
+                  setSubtaskTitle('');
+                  setSubtaskDescription('');
+                }}
+              >
+                Cancel
+              </button>
+              <button 
+                type="submit" 
+                className="btn btn-primary"
+                disabled={createSubtaskMutation.isLoading || !subtaskTitle.trim()}
+              >
+                {createSubtaskMutation.isLoading ? 'Creating...' : 'Create Subtask'}
+              </button>
+            </SubtaskFormActions>
+          </CreateSubtaskForm>
+        )}
+      </BreakdownSection>
 
       <AISection>
         <AITitle>

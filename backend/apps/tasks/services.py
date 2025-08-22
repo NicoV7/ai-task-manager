@@ -1,6 +1,7 @@
 import os
 import logging
-from typing import Optional
+import json
+from typing import Optional, List, Dict
 import anthropic
 from django.conf import settings
 
@@ -92,6 +93,103 @@ Please provide a helpful suggestion for this task."""
         except Exception as e:
             logger.error(f"Unexpected error in Claude AI service: {str(e)}")
             return "An unexpected error occurred. Please try again later."
+    
+    def breakdown_task(self, task_title: str, task_description: str) -> List[Dict[str, str]]:
+        """
+        Break down a complex task into smaller subtasks using AI
+        
+        Args:
+            task_title: The title of the task to break down
+            task_description: The description of the task
+            
+        Returns:
+            List of dictionaries with subtask information
+        """
+        if not self.is_available():
+            return []
+        
+        try:
+            system_prompt = """You are an AI assistant that helps break down complex tasks into smaller, manageable subtasks. 
+
+Your response must be a valid JSON array containing objects with these exact fields:
+- "title": A clear, concise title for the subtask (max 100 characters)
+- "description": A detailed description of what needs to be done for this subtask
+- "priority": One of: "low", "medium", "high", "urgent"
+
+Guidelines:
+1. Break the task into 3-8 logical subtasks
+2. Each subtask should be specific and actionable
+3. Order subtasks logically (dependencies first)
+4. Make subtasks small enough to complete in a reasonable time
+5. Ensure each subtask contributes to the overall goal
+6. Assign appropriate priorities based on importance and dependencies
+
+Return ONLY the JSON array, no other text."""
+
+            user_prompt = f"""Task to break down:
+Title: {task_title}
+Description: {task_description or "No description provided"}
+
+Please break this task into smaller, manageable subtasks. Return as JSON array only."""
+
+            response = self.client.messages.create(
+                model="claude-3-haiku-20240307",
+                max_tokens=1000,
+                temperature=0.3,  # Lower temperature for more consistent JSON format
+                system=system_prompt,
+                messages=[
+                    {
+                        "role": "user", 
+                        "content": user_prompt
+                    }
+                ]
+            )
+            
+            if response.content and len(response.content) > 0:
+                response_text = response.content[0].text.strip()
+                
+                # Extract JSON from the response
+                try:
+                    # Try to parse the response as JSON
+                    subtasks = json.loads(response_text)
+                    
+                    # Validate the structure
+                    if isinstance(subtasks, list):
+                        validated_subtasks = []
+                        for subtask in subtasks:
+                            if isinstance(subtask, dict) and 'title' in subtask and 'description' in subtask:
+                                # Ensure all required fields exist with defaults
+                                validated_subtask = {
+                                    'title': str(subtask.get('title', 'Untitled Subtask'))[:100],
+                                    'description': str(subtask.get('description', '')),
+                                    'priority': subtask.get('priority', 'medium') if subtask.get('priority') in ['low', 'medium', 'high', 'urgent'] else 'medium'
+                                }
+                                validated_subtasks.append(validated_subtask)
+                        
+                        return validated_subtasks[:8]  # Limit to 8 subtasks max
+                    
+                except json.JSONDecodeError:
+                    logger.error(f"Failed to parse Claude response as JSON: {response_text}")
+                    return []
+            
+            logger.error("Claude API returned empty or invalid response for task breakdown")
+            return []
+                
+        except anthropic.AuthenticationError:
+            logger.error("Claude API authentication failed during task breakdown")
+            return []
+        
+        except anthropic.RateLimitError:
+            logger.error("Claude API rate limit exceeded during task breakdown")
+            return []
+        
+        except anthropic.APIError as e:
+            logger.error(f"Claude API error during task breakdown: {str(e)}")
+            return []
+        
+        except Exception as e:
+            logger.error(f"Unexpected error in task breakdown: {str(e)}")
+            return []
 
 
 # Create a singleton instance

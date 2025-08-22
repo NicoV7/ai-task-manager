@@ -45,6 +45,7 @@ class Task(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='tasks')
+    parent_task = models.ForeignKey('self', on_delete=models.CASCADE, null=True, blank=True, related_name='subtasks')
     tags = models.ManyToManyField('Tag', blank=True)
 
     class Meta:
@@ -52,6 +53,44 @@ class Task(models.Model):
 
     def __str__(self):
         return self.title
+    
+    @property
+    def is_parent(self):
+        """Check if this task has subtasks"""
+        return self.subtasks.exists()
+    
+    @property
+    def is_subtask(self):
+        """Check if this task is a subtask"""
+        return self.parent_task is not None
+    
+    @property
+    def hierarchy_level(self):
+        """Get the hierarchy level (0 = root task, 1 = first level subtask, etc.)"""
+        level = 0
+        current = self.parent_task
+        while current:
+            level += 1
+            current = current.parent_task
+        return level
+    
+    def get_root_task(self):
+        """Get the root task in the hierarchy"""
+        current = self
+        while current.parent_task:
+            current = current.parent_task
+        return current
+    
+    def get_all_subtasks(self):
+        """Get all subtasks recursively"""
+        def get_subtasks_recursive(task):
+            subtasks = []
+            for subtask in task.subtasks.all():
+                subtasks.append(subtask)
+                subtasks.extend(get_subtasks_recursive(subtask))
+            return subtasks
+        
+        return get_subtasks_recursive(self)
 
 
 class Tag(models.Model):

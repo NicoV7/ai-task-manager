@@ -79,6 +79,63 @@ class TaskViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
 
+    @action(detail=True, methods=['post'])
+    def breakdown(self, request, pk=None):
+        """
+        Break down a complex task into subtasks using AI
+        """
+        task = self.get_object()
+        
+        # Check if task already has subtasks
+        if task.subtasks.exists():
+            return Response(
+                {'error': 'Task already has subtasks. Delete existing subtasks first to regenerate.'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        try:
+            # Get AI breakdown from Claude
+            subtasks_data = claude_service.breakdown_task(
+                task_title=task.title,
+                task_description=task.description or ""
+            )
+            
+            if not subtasks_data:
+                return Response(
+                    {'error': 'Failed to generate subtasks. The task might be too simple or AI service is unavailable.'},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+            
+            # Create subtasks
+            created_subtasks = []
+            for subtask_data in subtasks_data:
+                subtask = Task.objects.create(
+                    title=subtask_data['title'],
+                    description=subtask_data['description'],
+                    priority=subtask_data['priority'],
+                    status='todo',
+                    user=request.user,
+                    parent_task=task
+                )
+                created_subtasks.append(subtask)
+            
+            # Serialize and return the created subtasks
+            serializer = self.get_serializer(created_subtasks, many=True)
+            
+            logger.info(f"Task breakdown completed for task {task.id}: created {len(created_subtasks)} subtasks")
+            
+            return Response({
+                'message': f'Successfully created {len(created_subtasks)} subtasks',
+                'subtasks': serializer.data
+            })
+            
+        except Exception as e:
+            logger.error(f"Error during task breakdown: {str(e)}")
+            return Response(
+                {'error': 'Failed to break down task. Please try again.'},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+
     @action(detail=False, methods=['get'])
     def by_status(self, request):
         status_param = request.query_params.get('status')

@@ -15,6 +15,16 @@ class TaskSerializer(serializers.ModelSerializer):
         write_only=True,
         required=False
     )
+    subtasks = serializers.SerializerMethodField()
+    parent_task_title = serializers.CharField(source='parent_task.title', read_only=True)
+    hierarchy_level = serializers.ReadOnlyField()
+    is_parent = serializers.ReadOnlyField()
+    is_subtask = serializers.ReadOnlyField()
+    
+    def get_subtasks(self, obj):
+        """Get immediate subtasks (not recursive)"""
+        subtasks = obj.subtasks.all()
+        return TaskSerializer(subtasks, many=True, context=self.context).data
     
     def validate_progress(self, value):
         """Validate that progress is between 0 and 100."""
@@ -27,7 +37,8 @@ class TaskSerializer(serializers.ModelSerializer):
         fields = [
             'id', 'title', 'description', 'notes', 'priority', 'status',
             'progress', 'velocity', 'due_date', 'created_at', 'updated_at', 
-            'tags', 'tag_ids'
+            'parent_task', 'parent_task_title', 'subtasks', 'hierarchy_level',
+            'is_parent', 'is_subtask', 'tags', 'tag_ids'
         ]
 
     def create(self, validated_data):

@@ -48,6 +48,7 @@ export const tasksAPI = {
   deleteTask: (id) => api.delete(`/api/tasks/${id}/`),
   getTasksByStatus: (status) => api.get(`/api/tasks/by_status/?status=${status}`),
   getAISuggestion: (id, message) => api.post(`/api/tasks/${id}/ai_suggest/`, { message }),
+  breakdownTask: (id) => api.post(`/api/tasks/${id}/breakdown/`),
 };
 
 export const tagsAPI = {
