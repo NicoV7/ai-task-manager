@@ -31,7 +31,6 @@ services:
           property: connectionString
       - key: REDIS_URL
         fromService:
-          type: redis
           name: taskmanager-redis
           property: connectionString
       - key: ALLOWED_HOSTS
