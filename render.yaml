@@ -58,11 +58,13 @@ services:
       sizeGB: 1
 
   # React Frontend
-  - type: static
+  - type: web
     name: taskmanager-frontend
+    runtime: node
     rootDir: ./frontend
     buildCommand: npm ci && npm run build
-    staticPublishPath: ./build
+    startCommand: npx serve -s build -p $PORT
+    plan: starter
     pullRequestPreviewsEnabled: true
     buildFilter:
       paths:
@@ -74,10 +76,6 @@ services:
         value: wss://taskmanager-backend.onrender.com
       - key: GENERATE_SOURCEMAP
         value: "false"
-    routes:
-      - type: rewrite
-        source: /*
-        destination: /index.html
 
 # Environment Groups (optional - for shared environment variables)
 envVarGroups:
