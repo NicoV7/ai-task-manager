@@ -60,7 +60,6 @@ services:
   # React Frontend
   - type: static
     name: taskmanager-frontend
-    runtime: node
     rootDir: ./frontend
     buildCommand: npm ci && npm run build
     staticPublishPath: ./build
