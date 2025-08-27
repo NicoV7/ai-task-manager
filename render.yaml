@@ -1,6 +1,6 @@
 services:
   # PostgreSQL Database
-  - type: pserv
+  - type: postgres
     name: taskmanager-db
     plan: starter
     databaseName: taskmanager
@@ -15,10 +15,10 @@ services:
   # Django Backend API
   - type: web
     name: taskmanager-backend
-    dockerfilePath: ./backend/Dockerfile.prod
+    runtime: docker
+    rootDir: ./backend
+    dockerfilePath: ./Dockerfile.prod
     plan: starter
-    buildCommand: ""
-    startCommand: ""
     healthCheckPath: /health/
     envVars:
       - key: DJANGO_SETTINGS_MODULE
@@ -50,6 +50,8 @@ services:
         value: "2"
       - key: LOG_LEVEL
         value: "INFO"
+      - key: CLAUDE_API_KEY
+        sync: false
     disk:
       name: backend-disk
       mountPath: /app/media
@@ -58,8 +60,10 @@ services:
   # React Frontend
   - type: static
     name: taskmanager-frontend
-    buildCommand: cd frontend && chmod +x build.sh && ./build.sh
-    staticPublishPath: ./frontend/build
+    runtime: node
+    rootDir: ./frontend
+    buildCommand: npm ci && npm run build
+    staticPublishPath: ./build
     pullRequestPreviewsEnabled: true
     buildFilter:
       paths:
