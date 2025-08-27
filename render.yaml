@@ -3,8 +3,6 @@ services:
   - type: pserv
     name: taskmanager-db
     plan: starter
-    databaseName: taskmanager
-    user: taskmanager_user
 
   # Redis Cache
   - type: redis

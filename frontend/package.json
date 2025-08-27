@@ -17,7 +17,8 @@
     "date-fns": "^2.30.0",
     "react-datepicker": "^4.25.0",
     "react-select": "^5.8.0",
-    "lucide-react": "^0.294.0"
+    "lucide-react": "^0.294.0",
+    "serve": "^14.2.1"
   },
   "scripts": {
     "start": "react-scripts start",
