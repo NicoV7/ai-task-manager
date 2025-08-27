@@ -55,6 +55,8 @@ echo "Waiting for database..."\n\
 python -c "import os, django; os.environ.setdefault(\"DJANGO_SETTINGS_MODULE\", \"taskmanager.settings.production\"); django.setup(); from django.db import connection; connection.ensure_connection()"\n\
 echo "Running migrations..."\n\
 python manage.py migrate --noinput\n\
+echo "Creating cache table..."\n\
+python manage.py createcachetable\n\
 echo "Collecting static files..."\n\
 python manage.py collectstatic --noinput --clear\n\
 echo "Starting Gunicorn server on port ${PORT:-8000}..."\n\
