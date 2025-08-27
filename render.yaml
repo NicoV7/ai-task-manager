@@ -1,6 +1,6 @@
 services:
   # PostgreSQL Database
-  - type: postgres
+  - type: pserv
     name: taskmanager-db
     plan: starter
     databaseName: taskmanager
