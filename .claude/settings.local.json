@@ -15,7 +15,8 @@
     "deny": [],
     "ask": [],
     "additionalDirectories": [
-      "C:\\c\\ai-task-manager"
+      "C:\\c\\ai-task-manager",
+      "C:\\c"
     ]
   }
 }

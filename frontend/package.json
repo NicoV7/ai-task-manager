@@ -22,12 +22,14 @@
   },
   "scripts": {
     "start": "react-scripts start",
-    "build": "GENERATE_SOURCEMAP=false react-scripts build",
+    "build": "react-scripts build",
+    "build:prod": "GENERATE_SOURCEMAP=false react-scripts build",
     "build:analyze": "npm run build && npx webpack-bundle-analyzer build/static/js/*.js",
     "test": "react-scripts test",
     "test:coverage": "react-scripts test --coverage --watchAll=false",
     "eject": "react-scripts eject",
-    "optimize": "npm run build && npm run compress",
+    "serve": "serve -s build -p 3000",
+    "optimize": "npm run build:prod && npm run compress",
     "compress": "gzip -k build/static/js/*.js build/static/css/*.css"
   },
   "eslintConfig": {

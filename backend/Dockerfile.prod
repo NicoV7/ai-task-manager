@@ -4,6 +4,7 @@ FROM python:3.11-slim
 ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONUNBUFFERED=1
 ENV DEBIAN_FRONTEND=noninteractive
+ENV PYTHONPATH=/app
 
 # Install system dependencies
 RUN apt-get update \
@@ -14,52 +15,61 @@ RUN apt-get update \
         gcc \
         libc6-dev \
         libpq-dev \
+        git \
+        build-essential \
     && rm -rf /var/lib/apt/lists/*
 
 # Set work directory
 WORKDIR /app
 
-# Install Python dependencies
-COPY requirements.txt .
-RUN pip install --no-cache-dir --upgrade pip \
-    && pip install --no-cache-dir -r requirements.txt \
-    && pip install --no-cache-dir gunicorn
+# Create directories
+RUN mkdir -p /app/staticfiles /app/media /app/logs
 
-# Copy project
+# Copy and install Python dependencies
+COPY requirements.txt .
+RUN pip install --no-cache-dir --upgrade pip setuptools wheel \
+    && pip install --no-cache-dir -r requirements.txt
+
+# Copy project files
 COPY . .
 
-# Create staticfiles directory
-RUN mkdir -p /app/staticfiles
-
-# Create non-root user
+# Create non-root user and set permissions
 RUN adduser --disabled-password --gecos '' appuser \
-    && chown -R appuser:appuser /app
+    && chown -R appuser:appuser /app \
+    && chmod +x /app/manage.py
+
 USER appuser
 
-# Expose port (Render will set PORT env var)
-EXPOSE $PORT
+# Expose port
+EXPOSE 8000
 
 # Health check
-HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
-    CMD curl -f http://localhost:8000/health/ || exit 1
+HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
+    CMD curl -f http://localhost:${PORT:-8000}/health/ || exit 1
 
-# Production command
-CMD ["sh", "-c", "\
-    set -e && \
-    echo 'Running migrations...' && \
-    python manage.py migrate --noinput && \
-    echo 'Collecting static files...' && \
-    python manage.py collectstatic --noinput && \
-    echo 'Starting Gunicorn server...' && \
-    gunicorn taskmanager.wsgi:application \
-        --bind 0.0.0.0:$PORT \
-        --workers ${GUNICORN_WORKERS:-4} \
-        --worker-connections ${GUNICORN_CONNECTIONS:-1000} \
-        --max-requests 1000 \
-        --max-requests-jitter 100 \
-        --timeout 60 \
-        --keep-alive 2 \
-        --log-level ${LOG_LEVEL:-info} \
-        --access-logfile - \
-        --error-logfile - \
-    "]
+# Startup script
+RUN echo '#!/bin/bash\n\
+set -e\n\
+echo "Starting Django application..."\n\
+echo "Waiting for database..."\n\
+python -c "import os, django; os.environ.setdefault(\"DJANGO_SETTINGS_MODULE\", \"taskmanager.settings.production\"); django.setup(); from django.db import connection; connection.ensure_connection()"\n\
+echo "Running migrations..."\n\
+python manage.py migrate --noinput\n\
+echo "Collecting static files..."\n\
+python manage.py collectstatic --noinput --clear\n\
+echo "Starting Gunicorn server on port ${PORT:-8000}..."\n\
+exec gunicorn taskmanager.wsgi:application \\\n\
+    --bind 0.0.0.0:${PORT:-8000} \\\n\
+    --workers ${GUNICORN_WORKERS:-2} \\\n\
+    --worker-class gthread \\\n\
+    --worker-connections ${GUNICORN_CONNECTIONS:-1000} \\\n\
+    --max-requests 1000 \\\n\
+    --max-requests-jitter 100 \\\n\
+    --timeout 60 \\\n\
+    --keep-alive 2 \\\n\
+    --log-level ${LOG_LEVEL:-info} \\\n\
+    --access-logfile - \\\n\
+    --error-logfile - \\\n\
+    --preload' > /app/start.sh && chmod +x /app/start.sh
+
+CMD ["/app/start.sh"]
