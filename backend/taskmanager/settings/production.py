@@ -4,7 +4,7 @@ from decouple import config
 
 DEBUG = False
 
-ALLOWED_HOSTS = config('ALLOWED_HOSTS', default='').split(',')
+ALLOWED_HOSTS = taskmanager-backend-8k9i.onrender.com,localhost,127.0.0.1
 
 # Security settings
 SECURE_BROWSER_XSS_FILTER = True
@@ -107,5 +107,5 @@ RATELIMIT_ENABLE = True
 RATELIMIT_USE_CACHE = 'default'
 
 # CORS settings for production
-CORS_ALLOWED_ORIGINS = config('CORS_ALLOWED_ORIGINS', default='').split(',')
+CORS_ALLOWED_ORIGINS = https://taskmanager-frontend.onrender.com,http://localhost:3000
 CORS_ALLOW_CREDENTIALS = True
