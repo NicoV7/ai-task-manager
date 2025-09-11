@@ -11,6 +11,7 @@ import TaskList from './pages/TaskList';
 import CreateTask from './pages/CreateTask';
 import EditTask from './pages/EditTask';
 import TaskDetail from './pages/TaskDetail';
+import AISettings from './pages/AISettings';
 
 function App() {
   const { user, loading } = useAuth();
@@ -42,6 +43,7 @@ function App() {
             <Route path="tasks/new" element={<CreateTask />} />
             <Route path="tasks/:id" element={<TaskDetail />} />
             <Route path="tasks/:id/edit" element={<EditTask />} />
+            <Route path="ai-settings" element={<AISettings />} />
           </Route>
         </Routes>
       </div>

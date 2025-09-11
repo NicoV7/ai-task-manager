@@ -3,7 +3,7 @@ import { Outlet, Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../contexts/ThemeContext';
 import DarkModeToggle from './DarkModeToggle';
-import { LayoutDashboard, CheckSquare, Plus, LogOut } from 'lucide-react';
+import { LayoutDashboard, CheckSquare, Plus, LogOut, Settings } from 'lucide-react';
 import styled from 'styled-components';
 
 const LayoutContainer = styled.div`
@@ -147,6 +147,16 @@ function Layout() {
             >
               <Plus size={18} />
               New Task
+            </NavLink>
+          </NavItem>
+          <NavItem>
+            <NavLink 
+              to="/ai-settings"
+              className={isActive('/ai-settings') ? 'active' : ''}
+              theme={theme}
+            >
+              <Settings size={18} />
+              AI Settings
             </NavLink>
           </NavItem>
         </NavList>

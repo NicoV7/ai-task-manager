@@ -119,3 +119,11 @@ CORS_ALLOWED_ORIGINS = [
 ]
 
 CORS_ALLOW_CREDENTIALS = True
+
+# AI Service Configuration
+FIELD_ENCRYPTION_KEY = os.environ.get('FIELD_ENCRYPTION_KEY')
+
+# Optional global AI API keys (users can also configure their own)
+OPENAI_API_KEY = os.environ.get('OPENAI_API_KEY')
+ANTHROPIC_API_KEY = os.environ.get('ANTHROPIC_API_KEY')
+GOOGLE_AI_API_KEY = os.environ.get('GOOGLE_AI_API_KEY')
