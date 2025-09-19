@@ -10,7 +10,10 @@
       "Bash(docker-compose restart:*)",
       "Bash(curl:*)",
       "Bash(docker-compose:*)",
-      "Bash(python:*)"
+      "Bash(python:*)",
+      "Read(//c/my-portfolio/**)",
+      "Bash(npm start)",
+      "Bash(npm install)"
     ],
     "deny": [],
     "ask": [],

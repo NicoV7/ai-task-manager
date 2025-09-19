@@ -1,5 +1,6 @@
 import React from 'react';
 import styled, { keyframes, css } from 'styled-components';
+import { useTheme } from '../contexts/ThemeContext';
 
 const float = keyframes`
   0%, 100% { transform: translateY(0px) rotate(0deg); }
@@ -29,6 +30,50 @@ const gradientShift = keyframes`
   100% { background-position: 0% 50%; }
 `;
 
+const nightGradientShift = keyframes`
+  0% { background-position: 0% 50%; }
+  25% { background-position: 100% 50%; }
+  50% { background-position: 100% 100%; }
+  75% { background-position: 0% 100%; }
+  100% { background-position: 0% 50%; }
+`;
+
+const nightGlow = keyframes`
+  0%, 100% {
+    opacity: 0.3;
+    transform: scale(1) rotate(0deg);
+    filter: blur(20px) hue-rotate(0deg);
+  }
+  25% {
+    opacity: 0.6;
+    transform: scale(1.2) rotate(90deg);
+    filter: blur(25px) hue-rotate(30deg);
+  }
+  50% {
+    opacity: 0.4;
+    transform: scale(0.8) rotate(180deg);
+    filter: blur(30px) hue-rotate(60deg);
+  }
+  75% {
+    opacity: 0.7;
+    transform: scale(1.1) rotate(270deg);
+    filter: blur(22px) hue-rotate(90deg);
+  }
+`;
+
+const nightPulse = keyframes`
+  0%, 100% {
+    opacity: 0.1;
+    transform: scale(1);
+    box-shadow: 0 0 20px rgba(249, 115, 22, 0.2);
+  }
+  50% {
+    opacity: 0.3;
+    transform: scale(1.3);
+    box-shadow: 0 0 40px rgba(249, 115, 22, 0.4);
+  }
+`;
+
 const BackgroundContainer = styled.div`
   position: fixed;
   top: 0;
@@ -37,28 +82,46 @@ const BackgroundContainer = styled.div`
   height: 100%;
   overflow: hidden;
   z-index: -1;
-  background: linear-gradient(
-    -45deg,
-    #667eea,
-    #764ba2,
-    #f093fb,
-    #f5576c,
-    #4facfe,
-    #00f2fe
-  );
+  background: ${props => props.isNightMode
+    ? `linear-gradient(
+        -45deg,
+        #000000,
+        #1a0a00,
+        #2d1b06,
+        #1a0a00,
+        #000000,
+        #0a0a0a,
+        #1a0e00
+      )`
+    : `linear-gradient(
+        -45deg,
+        #667eea,
+        #764ba2,
+        #f093fb,
+        #f5576c,
+        #4facfe,
+        #00f2fe
+      )`
+  };
   background-size: 400% 400%;
-  animation: ${gradientShift} 15s ease infinite;
+  animation: ${props => props.isNightMode ? nightGradientShift : gradientShift}
+             ${props => props.isNightMode ? '20s' : '15s'} ease infinite;
+  transition: background 0.3s ease;
 `;
 
 const getAnimationForType = (animationType, duration) => {
   switch(animationType) {
-    case 'float2': 
+    case 'float2':
       return css`${float2} ${duration || '20s'} ease-in-out infinite`;
-    case 'float3': 
+    case 'float3':
       return css`${float3} ${duration || '25s'} ease-in-out infinite`;
-    case 'pulse': 
+    case 'pulse':
       return css`${pulse} ${duration || '4s'} ease-in-out infinite`;
-    default: 
+    case 'nightGlow':
+      return css`${nightGlow} ${duration || '25s'} ease-in-out infinite`;
+    case 'nightPulse':
+      return css`${nightPulse} ${duration || '20s'} ease-in-out infinite`;
+    default:
       return css`${float} ${duration || '15s'} ease-in-out infinite`;
   }
 };
@@ -99,8 +162,10 @@ const GlowOrb = styled.div`
 `;
 
 function AnimatedBackground() {
+  const { isNightMode } = useTheme();
+
   // Generate random particles
-  const particles = Array.from({ length: 20 }, (_, i) => ({
+  const particles = Array.from({ length: isNightMode ? 30 : 20 }, (_, i) => ({
     id: i,
     left: `${Math.random() * 100}%`,
     top: `${Math.random() * 100}%`,
@@ -108,8 +173,112 @@ function AnimatedBackground() {
     duration: `${8 + Math.random() * 12}s`
   }));
 
+  if (isNightMode) {
+    return (
+      <BackgroundContainer isNightMode={true}>
+        {/* Night mode floating shapes with orange accents */}
+        <FloatingShape
+          style={{
+            width: '350px',
+            height: '350px',
+            top: '5%',
+            left: '5%',
+          }}
+          gradient="radial-gradient(circle, rgba(249, 115, 22, 0.1) 0%, rgba(0, 0, 0, 0.8) 70%)"
+          animation="nightGlow"
+          duration="25s"
+          delay="0s"
+        />
+
+        <FloatingShape
+          style={{
+            width: '280px',
+            height: '280px',
+            top: '50%',
+            right: '10%',
+          }}
+          gradient="radial-gradient(circle, rgba(234, 88, 12, 0.08) 0%, rgba(0, 0, 0, 0.9) 70%)"
+          animation="nightGlow"
+          duration="30s"
+          delay="8s"
+        />
+
+        <FloatingShape
+          style={{
+            width: '200px',
+            height: '200px',
+            top: '15%',
+            right: '20%',
+          }}
+          gradient="linear-gradient(135deg, rgba(249, 115, 22, 0.05), rgba(234, 88, 12, 0.1))"
+          animation="nightPulse"
+          duration="22s"
+          delay="12s"
+        />
+
+        <FloatingShape
+          style={{
+            width: '320px',
+            height: '320px',
+            bottom: '5%',
+            left: '15%',
+          }}
+          gradient="radial-gradient(ellipse, rgba(249, 115, 22, 0.06) 0%, rgba(0, 0, 0, 0.95) 80%)"
+          animation="nightGlow"
+          duration="35s"
+          delay="5s"
+        />
+
+        {/* Additional night orbs for ambiance */}
+        <GlowOrb
+          style={{
+            width: '500px',
+            height: '500px',
+            top: '25%',
+            left: '35%',
+          }}
+          color="rgba(249, 115, 22, 0.02)"
+          duration="18s"
+          delay="0s"
+        />
+
+        <GlowOrb
+          style={{
+            width: '400px',
+            height: '400px',
+            bottom: '15%',
+            right: '25%',
+          }}
+          color="rgba(234, 88, 12, 0.03)"
+          duration="24s"
+          delay="10s"
+        />
+
+        {/* Enhanced particles for night mode */}
+        <ParticleContainer>
+          {particles.map(particle => (
+            <Particle
+              key={particle.id}
+              style={{
+                left: particle.left,
+                top: particle.top,
+                background: Math.random() > 0.7
+                  ? 'rgba(249, 115, 22, 0.6)'
+                  : 'rgba(255, 255, 255, 0.3)',
+                width: Math.random() > 0.8 ? '3px' : '2px',
+                height: Math.random() > 0.8 ? '3px' : '2px',
+              }}
+              delay={particle.delay}
+              duration={particle.duration}
+            />
+          ))}
+        </ParticleContainer>
+      </BackgroundContainer>
+    );
+  }
+
   return (
-    <BackgroundContainer>
+    <BackgroundContainer isNightMode={false}>
       {/* Large floating shapes */}
       <FloatingShape
         style={{

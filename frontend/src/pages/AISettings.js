@@ -7,9 +7,10 @@ const Container = styled.div`
   max-width: 600px;
   margin: 0 auto;
   padding: 20px;
-  background: ${props => props.theme.cardBackground};
+  background: var(--color-surface);
   border-radius: 12px;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  box-shadow: var(--shadow);
+  transition: all 0.3s ease;
 `;
 
 const Header = styled.div`
@@ -17,31 +18,35 @@ const Header = styled.div`
 `;
 
 const Title = styled.h1`
-  color: ${props => props.theme.textPrimary};
+  color: var(--color-text);
   margin-bottom: 8px;
   font-size: 28px;
   font-weight: 600;
+  transition: color 0.3s ease;
 `;
 
 const Subtitle = styled.p`
-  color: ${props => props.theme.textSecondary};
+  color: var(--color-text-secondary);
   margin: 0;
   font-size: 16px;
+  transition: color 0.3s ease;
 `;
 
 const Section = styled.div`
   margin-bottom: 30px;
   padding: 20px;
-  background: ${props => props.theme.background};
+  background: var(--color-background);
   border-radius: 8px;
-  border: 1px solid ${props => props.theme.border};
+  border: 1px solid var(--color-border);
+  transition: all 0.3s ease;
 `;
 
 const SectionTitle = styled.h2`
-  color: ${props => props.theme.textPrimary};
+  color: var(--color-text);
   margin-bottom: 15px;
   font-size: 20px;
   font-weight: 600;
+  transition: color 0.3s ease;
 `;
 
 const FormGroup = styled.div`
@@ -50,9 +55,10 @@ const FormGroup = styled.div`
 
 const Label = styled.label`
   display: block;
-  color: ${props => props.theme.textPrimary};
+  color: var(--color-text);
   margin-bottom: 8px;
   font-weight: 500;
+  transition: color 0.3s ease;
 `;
 
 const InputWrapper = styled.div`
@@ -63,39 +69,58 @@ const Input = styled.input`
   width: 100%;
   padding: 12px;
   padding-right: ${props => props.hasIcon ? '40px' : '12px'};
-  border: 1px solid ${props => props.theme.border};
+  border: 1px solid var(--color-border);
   border-radius: 6px;
-  background: ${props => props.theme.background};
-  color: ${props => props.theme.textPrimary};
+  background: var(--color-surface);
+  color: var(--color-text);
   font-size: 14px;
   font-family: 'JetBrains Mono', 'Consolas', 'Monaco', monospace;
   box-sizing: border-box;
+  transition: border-color 0.3s ease, box-shadow 0.3s ease, background-color 0.3s ease;
 
   &:focus {
     outline: none;
-    border-color: ${props => props.theme.primary};
-    box-shadow: 0 0 0 3px ${props => props.theme.primary}20;
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
   }
 
   &::placeholder {
-    color: ${props => props.theme.textSecondary};
+    color: var(--color-text-muted);
+  }
+
+  /* Night mode focus styles */
+  [data-theme="night"] & {
+    &:focus {
+      border-color: #f97316;
+      box-shadow: 0 0 0 3px rgba(249, 115, 22, 0.2);
+    }
   }
 `;
 
 const Select = styled.select`
   width: 100%;
   padding: 12px;
-  border: 1px solid ${props => props.theme.border};
+  border: 1px solid var(--color-border);
   border-radius: 6px;
-  background: ${props => props.theme.background};
-  color: ${props => props.theme.textPrimary};
+  background: var(--color-surface);
+  color: var(--color-text);
   font-size: 14px;
   box-sizing: border-box;
+  transition: border-color 0.3s ease, box-shadow 0.3s ease, background-color 0.3s ease;
+  cursor: pointer;
 
   &:focus {
     outline: none;
-    border-color: ${props => props.theme.primary};
-    box-shadow: 0 0 0 3px ${props => props.theme.primary}20;
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+  }
+
+  /* Night mode focus styles */
+  [data-theme="night"] & {
+    &:focus {
+      border-color: #f97316;
+      box-shadow: 0 0 0 3px rgba(249, 115, 22, 0.2);
+    }
   }
 `;
 
@@ -106,14 +131,15 @@ const IconButton = styled.button`
   transform: translateY(-50%);
   background: none;
   border: none;
-  color: ${props => props.theme.textSecondary};
+  color: var(--color-text-secondary);
   cursor: pointer;
   padding: 4px;
   border-radius: 4px;
+  transition: all 0.3s ease;
 
   &:hover {
-    color: ${props => props.theme.textPrimary};
-    background: ${props => props.theme.border};
+    color: var(--color-text);
+    background: var(--color-border);
   }
 `;
 
@@ -127,29 +153,86 @@ const Button = styled.button`
   font-size: 14px;
   font-weight: 500;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
+  transform: translateY(0);
+
+  /* Shimmer effect */
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(
+      90deg,
+      transparent,
+      rgba(255, 255, 255, 0.1),
+      transparent
+    );
+    transition: left 0.5s ease;
+  }
+
+  &:hover::before {
+    left: 100%;
+  }
+
+  &:active {
+    transform: translateY(1px);
+  }
 
   ${props => props.variant === 'primary' && `
-    background: ${props.theme.primary};
+    background-color: var(--color-primary);
     color: white;
+    box-shadow: var(--shadow);
+    border: 1px solid var(--color-primary);
 
     &:hover {
-      background: ${props.theme.primaryHover};
+      background-color: var(--color-primary-hover);
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-glow);
+    }
+
+    /* Ensure proper styling in night mode */
+    [data-theme="night"] & {
+      background-color: #f97316;
+      border-color: #f97316;
+
+      &:hover {
+        background-color: #ea580c;
+        border-color: #ea580c;
+        box-shadow: 0 4px 20px rgba(249, 115, 22, 0.5);
+      }
     }
   `}
 
   ${props => props.variant === 'secondary' && `
-    background: ${props.theme.border};
-    color: ${props.theme.textPrimary};
+    background-color: var(--color-secondary);
+    color: var(--color-text-secondary);
+    border: 1px solid var(--color-border);
 
     &:hover {
-      background: ${props.theme.borderHover};
+      background-color: var(--color-secondary-hover);
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-hover);
     }
   `}
 
   &:disabled {
     opacity: 0.6;
     cursor: not-allowed;
+    transform: none;
+
+    &:hover {
+      transform: none;
+      box-shadow: none;
+    }
+
+    &::before {
+      display: none;
+    }
   }
 `;
 
@@ -179,10 +262,11 @@ const StatusIndicator = styled.div`
 `;
 
 const HelpText = styled.p`
-  color: ${props => props.theme.textSecondary};
+  color: var(--color-text-secondary);
   font-size: 14px;
   margin-top: 8px;
   margin-bottom: 0;
+  transition: color 0.3s ease;
 `;
 
 const ButtonGroup = styled.div`

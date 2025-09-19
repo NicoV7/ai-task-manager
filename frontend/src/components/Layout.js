@@ -2,7 +2,7 @@ import React from 'react';
 import { Outlet, Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../contexts/ThemeContext';
-import DarkModeToggle from './DarkModeToggle';
+import ThemeSelector from './ThemeSelector';
 import { LayoutDashboard, CheckSquare, Plus, LogOut, Settings } from 'lucide-react';
 import styled from 'styled-components';
 
@@ -11,13 +11,25 @@ const LayoutContainer = styled.div`
   min-height: 100vh;
 `;
 
+const getSidebarBackground = (theme) => {
+  if (theme.isNightMode) return '#000000';
+  if (theme.isDarkMode) return '#1f2937';
+  return '#1a202c';
+};
+
+const getSidebarBorder = (theme) => {
+  if (theme.isNightMode) return '#333333';
+  if (theme.isDarkMode) return '#374151';
+  return '#2d3748';
+};
+
 const Sidebar = styled.nav`
   width: 250px;
-  background: ${props => props.theme.isDarkMode ? '#1f2937' : '#1a202c'};
+  background: ${props => getSidebarBackground(props.theme)};
   color: white;
   padding: 20px;
   transition: background-color 0.3s ease;
-  border-right: 1px solid ${props => props.theme.isDarkMode ? '#374151' : '#2d3748'};
+  border-right: 1px solid ${props => getSidebarBorder(props.theme)};
 `;
 
 const Logo = styled.h1`
@@ -38,19 +50,31 @@ const NavItem = styled.li`
   margin-bottom: 10px;
 `;
 
+const getNavLinkColor = (theme) => {
+  if (theme.isNightMode) return '#ffffff';
+  if (theme.isDarkMode) return '#d1d5db';
+  return '#cbd5e0';
+};
+
+const getNavLinkHoverBg = (theme) => {
+  if (theme.isNightMode) return '#333333';
+  if (theme.isDarkMode) return '#374151';
+  return '#2d3748';
+};
+
 const NavLink = styled(Link)`
   display: flex;
   align-items: center;
   gap: 10px;
   padding: 12px;
-  color: ${props => props.theme.isDarkMode ? '#d1d5db' : '#cbd5e0'};
+  color: ${props => getNavLinkColor(props.theme)};
   text-decoration: none;
   border-radius: 6px;
   transition: all 0.3s ease;
 
   &:hover, &.active {
-    background: ${props => props.theme.isDarkMode ? '#374151' : '#2d3748'};
-    color: white;
+    background: ${props => getNavLinkHoverBg(props.theme)};
+    color: ${props => props.theme.isNightMode ? '#f97316' : 'white'};
   }
 `;
 
@@ -61,7 +85,7 @@ const LogoutButton = styled.button`
   padding: 12px;
   background: none;
   border: none;
-  color: ${props => props.theme.isDarkMode ? '#d1d5db' : '#cbd5e0'};
+  color: ${props => getNavLinkColor(props.theme)};
   cursor: pointer;
   border-radius: 6px;
   transition: all 0.3s ease;
@@ -69,8 +93,8 @@ const LogoutButton = styled.button`
   margin-top: 20px;
 
   &:hover {
-    background: ${props => props.theme.isDarkMode ? '#374151' : '#2d3748'};
-    color: white;
+    background: ${props => getNavLinkHoverBg(props.theme)};
+    color: ${props => props.theme.isNightMode ? '#f97316' : 'white'};
   }
 `;
 
@@ -81,25 +105,38 @@ const MainContent = styled.main`
   transition: background-color 0.3s ease;
 `;
 
+const getUserInfoColor = (theme) => {
+  if (theme.isNightMode) return '#cccccc';
+  if (theme.isDarkMode) return '#9ca3af';
+  return '#a0aec0';
+};
+
 const UserInfo = styled.div`
   margin-top: auto;
   padding-top: 20px;
-  border-top: 1px solid ${props => props.theme.isDarkMode ? '#374151' : '#2d3748'};
+  border-top: 1px solid ${props => getSidebarBorder(props.theme)};
   font-size: 14px;
-  color: ${props => props.theme.isDarkMode ? '#9ca3af' : '#a0aec0'};
+  color: ${props => getUserInfoColor(props.theme)};
   transition: color 0.3s ease, border-color 0.3s ease;
 `;
 
 const SidebarHeader = styled.div`
   display: flex;
-  align-items: center;
-  justify-content: space-between;
+  flex-direction: column;
+  gap: 15px;
   margin-bottom: 30px;
+`;
+
+const HeaderTop = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: center;
 `;
 
 const ToggleWrapper = styled.div`
   display: flex;
   align-items: center;
+  justify-content: center;
 `;
 
 function Layout() {
@@ -113,9 +150,11 @@ function Layout() {
     <LayoutContainer>
       <Sidebar theme={theme}>
         <SidebarHeader>
-          <Logo theme={theme}>AI Task Manager</Logo>
+          <HeaderTop>
+            <Logo theme={theme}>AI Task Manager</Logo>
+          </HeaderTop>
           <ToggleWrapper>
-            <DarkModeToggle size="small" />
+            <ThemeSelector />
           </ToggleWrapper>
         </SidebarHeader>
         <NavList>

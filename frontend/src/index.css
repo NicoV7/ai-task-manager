@@ -53,29 +53,29 @@
   --color-primary-hover: #764ba2;
   --color-secondary: rgba(255, 255, 255, 0.1);
   --color-secondary-hover: rgba(255, 255, 255, 0.2);
-  
+
   --color-background: rgba(17, 24, 39, 0.95);
   --color-surface: rgba(31, 41, 55, 0.9);
   --color-surface-hover: rgba(55, 65, 81, 0.9);
-  
+
   --color-text: #f9fafb;
   --color-text-secondary: #d1d5db;
   --color-text-muted: #9ca3af;
-  
+
   --color-border: #374151;
   --color-border-light: #4b5563;
-  
+
   --color-success: #34d399;
   --color-success-bg: #064e3b;
   --color-warning: #fbbf24;
   --color-warning-bg: #78350f;
   --color-error: #f87171;
   --color-error-bg: #7f1d1d;
-  
+
   --shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
   --shadow-hover: 0 8px 25px rgba(0, 0, 0, 0.4);
   --shadow-glow: 0 0 20px rgba(102, 126, 234, 0.4);
-  
+
   /* Status colors for dark theme */
   --status-todo-bg: #374151;
   --status-todo-text: #d1d5db;
@@ -83,7 +83,7 @@
   --status-progress-text: #fbbf24;
   --status-completed-bg: #064e3b;
   --status-completed-text: #34d399;
-  
+
   /* Priority colors for dark theme */
   --priority-urgent-bg: #7f1d1d;
   --priority-urgent-text: #f87171;
@@ -93,6 +93,54 @@
   --priority-medium-text: #fbbf24;
   --priority-low-bg: #064e3b;
   --priority-low-text: #34d399;
+}
+
+/* Night theme - Pure black OLED mode */
+[data-theme="night"] {
+  --color-primary: #f97316;
+  --color-primary-hover: #ea580c;
+  --color-secondary: rgba(255, 255, 255, 0.05);
+  --color-secondary-hover: rgba(255, 255, 255, 0.1);
+
+  --color-background: rgba(0, 0, 0, 1);
+  --color-surface: rgba(0, 0, 0, 0.95);
+  --color-surface-hover: rgba(26, 26, 26, 0.9);
+
+  --color-text: #ffffff;
+  --color-text-secondary: #ffffff;
+  --color-text-muted: #cccccc;
+
+  --color-border: #333333;
+  --color-border-light: #404040;
+
+  --color-success: #22c55e;
+  --color-success-bg: #052e16;
+  --color-warning: #f59e0b;
+  --color-warning-bg: #451a03;
+  --color-error: #ef4444;
+  --color-error-bg: #450a0a;
+
+  --shadow: 0 4px 20px rgba(0, 0, 0, 0.8);
+  --shadow-hover: 0 8px 25px rgba(0, 0, 0, 0.9);
+  --shadow-glow: 0 0 20px rgba(249, 115, 22, 0.4);
+
+  /* Status colors for night theme */
+  --status-todo-bg: #333333;
+  --status-todo-text: #ffffff;
+  --status-progress-bg: #451a03;
+  --status-progress-text: #f59e0b;
+  --status-completed-bg: #052e16;
+  --status-completed-text: #22c55e;
+
+  /* Priority colors for night theme */
+  --priority-urgent-bg: #450a0a;
+  --priority-urgent-text: #ef4444;
+  --priority-high-bg: #7c2d12;
+  --priority-high-text: #fb923c;
+  --priority-medium-bg: #451a03;
+  --priority-medium-text: #f59e0b;
+  --priority-low-bg: #052e16;
+  --priority-low-text: #22c55e;
 }
 
 * {
@@ -176,6 +224,17 @@ code {
   box-shadow: var(--shadow-glow);
 }
 
+/* Night mode specific button enhancements */
+[data-theme="night"] .btn-primary {
+  background-color: #f97316;
+  box-shadow: 0 2px 8px rgba(249, 115, 22, 0.3);
+}
+
+[data-theme="night"] .btn-primary:hover {
+  background-color: #ea580c;
+  box-shadow: 0 4px 20px rgba(249, 115, 22, 0.5);
+}
+
 .btn-primary:disabled {
   opacity: 0.6;
   cursor: not-allowed;
@@ -225,6 +284,16 @@ code {
   box-shadow: 0 0 0 3px rgba(49, 130, 206, 0.1);
 }
 
+/* Night mode focus styles */
+[data-theme="night"] .form-input:focus {
+  border-color: #f97316;
+  box-shadow: 0 0 0 3px rgba(249, 115, 22, 0.2);
+}
+
+[data-theme="night"] .btn:focus {
+  box-shadow: 0 0 0 3px rgba(249, 115, 22, 0.2);
+}
+
 .card {
   background: var(--color-surface);
   backdrop-filter: blur(20px);
@@ -266,6 +335,19 @@ code {
 
 [data-theme="dark"] .card-interactive:hover {
   box-shadow: 0 8px 25px rgba(0, 0, 0, 0.4);
+}
+
+[data-theme="night"] .card {
+  background: rgba(0, 0, 0, 0.95);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+[data-theme="night"] .card:hover {
+  box-shadow: 0 8px 25px rgba(249, 115, 22, 0.2);
+}
+
+[data-theme="night"] .card-interactive:hover {
+  box-shadow: 0 8px 25px rgba(249, 115, 22, 0.3);
 }
 
 /* Loading and error states */
@@ -394,6 +476,40 @@ code {
   }
 }
 
+/* Custom scrollbar for all themes */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--color-surface);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--color-border);
+  border-radius: 4px;
+  transition: background-color 0.3s ease;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-primary);
+}
+
+/* Night mode scrollbar */
+[data-theme="night"] ::-webkit-scrollbar-track {
+  background: #000000;
+}
+
+[data-theme="night"] ::-webkit-scrollbar-thumb {
+  background: #333333;
+}
+
+[data-theme="night"] ::-webkit-scrollbar-thumb:hover {
+  background: #f97316;
+}
+
 /* Glassmorphism effects */
 .glass {
   background: rgba(255, 255, 255, 0.1);
@@ -407,9 +523,22 @@ code {
   border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
+[data-theme="night"] .glass {
+  background: rgba(0, 0, 0, 0.8);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
 /* Gradient text effects */
 .gradient-text {
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Night mode gradient text */
+[data-theme="night"] .gradient-text {
+  background: linear-gradient(135deg, #f97316 0%, #ea580c 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -429,4 +558,34 @@ code {
   background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
   background-size: 200px 100%;
   animation: shimmer 1.5s infinite;
+}
+
+/* Night mode shimmer */
+[data-theme="night"] .shimmer {
+  background: linear-gradient(90deg, transparent, rgba(249, 115, 22, 0.1), transparent);
+}
+
+/* Enhanced glow effects for night mode */
+@keyframes nightGlow {
+  0%, 100% {
+    box-shadow: 0 0 20px rgba(249, 115, 22, 0.3);
+  }
+  50% {
+    box-shadow: 0 0 30px rgba(249, 115, 22, 0.5);
+  }
+}
+
+[data-theme="night"] .glow-effect {
+  animation: nightGlow 2s ease-in-out infinite;
+}
+
+/* Smooth theme transitions */
+* {
+  transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+/* Selection colors for night mode */
+[data-theme="night"] ::selection {
+  background-color: rgba(249, 115, 22, 0.3);
+  color: #ffffff;
 }
