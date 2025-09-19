@@ -1,52 +1,51 @@
-# Render Deployment Guide
+# Manual Render Deployment Guide
 
-This guide provides step-by-step instructions for manually deploying the AI Task Manager application on Render using individual services.
+This guide shows you how to deploy the AI Task Manager application to Render by setting up each service individually. This approach gives you more control over the deployment process.
 
-## Prerequisites
+## What You'll Need
 
-- Render account (free tier available)
-- GitHub repository with your application code
-- Basic understanding of environment variables
+- A Render account (free tier is available)
+- Your application code in a GitHub repository
+- Basic familiarity with environment variables
 
-## Deployment Overview
+## Understanding the Application Structure
 
-The application consists of four services:
-1. **PostgreSQL Database** - Data storage
-2. **Redis Cache** - Session and caching
-3. **Django Backend** - API server
-4. **React Frontend** - Web application
+The AI Task Manager consists of four separate services that work together:
+1. **PostgreSQL Database** - Stores all your application data
+2. **Redis Cache** - Handles session storage and caching for better performance
+3. **Django Backend** - The API server that handles all business logic
+4. **React Frontend** - The web interface that users interact with
 
-## Step 1: Create PostgreSQL Database
+## Step 1: Set Up Your Database
 
-1. **Login to Render Dashboard**
-   - Go to [render.com](https://render.com)
-   - Sign in to your account
+1. **Access your Render dashboard**
+   - Go to [render.com](https://render.com) and sign in
 
-2. **Create New PostgreSQL Database**
-   - Click "New" → "PostgreSQL"
-   - Configure the database:
+2. **Create a PostgreSQL database**
+   - Click "New" then select "PostgreSQL"
+   - Set up your database with these settings:
      - **Name**: `taskmanager-db`
-     - **Database**: `taskmanager` 
+     - **Database**: `taskmanager`
      - **User**: `taskmanager_user`
-     - **Region**: Choose closest to your users
-     - **Plan**: Free (or Starter for production)
+     - **Region**: Choose the region closest to your users
+     - **Plan**: Start with Free (upgrade to Starter for production use)
 
-3. **Save Database Connection Details**
-   - After creation, note the **Internal Database URL** from the database dashboard
-   - You'll need this for the backend service
+3. **Save your connection details**
+   - After creation, copy the **Internal Database URL** from the database dashboard
+   - You'll need this URL when setting up the backend service
 
-## Step 2: Create Redis Cache
+## Step 2: Set Up Redis for Caching
 
-1. **Create New Redis Instance**
-   - Click "New" → "Redis"
-   - Configure Redis:
+1. **Create a Redis instance**
+   - Click "New" then select "Redis"
+   - Configure your Redis instance:
      - **Name**: `taskmanager-redis`
-     - **Plan**: Free (25MB) or Starter
-     - **Region**: Same as database
+     - **Plan**: Free (25MB storage) or Starter for better performance
+     - **Region**: Use the same region as your database
 
-2. **Save Redis Connection Details**
-   - Note the **Internal Redis URL** from the Redis dashboard
-   - You'll need this for the backend service
+2. **Save your Redis connection details**
+   - Copy the **Internal Redis URL** from the Redis dashboard
+   - You'll need this URL for the backend configuration
 
 ## Step 3: Deploy Django Backend
 
