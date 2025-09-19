@@ -297,3 +297,4 @@ pip-delete-this-directory.txt
 **/*key*
 !**/package.json
 !**/requirements.txt
+.claude/
