@@ -19,200 +19,57 @@ aiApi.interceptors.request.use((config) => {
   return config;
 });
 
-// AI Provider Service
-export const aiProviderService = {
-  // Get all available AI providers
-  getProviders: async () => {
-    const response = await aiApi.get('/providers/');
-    return response.data;
-  },
-
-  // Get specific provider details
-  getProvider: async (providerId) => {
-    const response = await aiApi.get(`/providers/${providerId}/`);
-    return response.data;
-  },
-};
-
-// User AI Settings Service
-export const aiSettingsService = {
-  // Get user's AI settings
+// Claude Settings Service (Simplified)
+export const claudeSettingsService = {
+  // Get user's Claude settings
   getSettings: async () => {
     const response = await aiApi.get('/settings/');
     return response.data;
   },
 
-  // Update user's AI settings
+  // Update user's Claude settings
   updateSettings: async (settings) => {
     const response = await aiApi.post('/settings/', settings);
     return response.data;
   },
-};
 
-// API Key Management Service
-export const apiKeyService = {
-  // Get user's API key status for all providers
-  getApiKeys: async () => {
-    const response = await aiApi.get('/api-keys/');
-    return response.data;
-  },
-
-  // Add or update API key for a provider
-  saveApiKey: async (provider, apiKey) => {
-    const response = await aiApi.post('/api-keys/', {
-      provider,
-      api_key: apiKey,
-    });
-    return response.data;
-  },
-
-  // Delete API key for a provider
-  deleteApiKey: async (provider) => {
-    const response = await aiApi.delete('/api-keys/', {
-      data: { provider },
-    });
-    return response.data;
-  },
-
-  // Test API key connection
-  testConnection: async (provider, apiKey = null) => {
-    const payload = { provider };
+  // Test Claude API key connection
+  testConnection: async (apiKey = null) => {
+    const payload = {};
     if (apiKey) {
       payload.api_key = apiKey;
     }
-    
+
     const response = await aiApi.post('/test-connection/', payload);
     return response.data;
   },
 };
 
-// Chat Completion Service
-export const chatService = {
-  // Generate AI response
-  generateResponse: async (messages, options = {}) => {
-    const payload = {
-      messages,
-      ...options,
-    };
-    
-    const response = await aiApi.post('/chat/', payload);
+// Claude Chat Service (Simplified)
+export const claudeChatService = {
+  // Generate Claude AI response
+  generateResponse: async (messages) => {
+    const response = await aiApi.post('/chat/', { messages });
     return response.data;
-  },
-
-  // Generate streaming AI response
-  generateStreamResponse: async (messages, options = {}, onChunk) => {
-    const payload = {
-      messages,
-      stream: true,
-      ...options,
-    };
-
-    // For streaming, we would typically use EventSource or similar
-    // For now, implementing a basic approach
-    const response = await fetch(`${API_BASE_URL}/api/ai/chat/`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Token ${localStorage.getItem('token')}`,
-      },
-      body: JSON.stringify(payload),
-    });
-
-    if (!response.ok) {
-      throw new Error('Failed to generate response');
-    }
-
-    const reader = response.body.getReader();
-    const decoder = new TextDecoder();
-
-    try {
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-
-        const chunk = decoder.decode(value);
-        const lines = chunk.split('\n');
-
-        for (const line of lines) {
-          if (line.startsWith('data: ')) {
-            try {
-              const data = JSON.parse(line.slice(6));
-              onChunk(data);
-            } catch (e) {
-              // Skip invalid JSON
-            }
-          }
-        }
-      }
-    } finally {
-      reader.releaseLock();
-    }
   },
 };
 
-// Utility functions
-export const aiUtils = {
-  // Detect provider from API key format
-  detectProvider: (apiKey) => {
-    if (!apiKey) return null;
-
-    // OpenAI patterns
-    if (apiKey.match(/^sk-proj-[A-Za-z0-9_-]+$/) || apiKey.match(/^sk-[A-Za-z0-9_-]{48,}$/)) {
-      return 'openai';
-    }
-
-    // Anthropic patterns
-    if (apiKey.match(/^sk-ant-api03-[A-Za-z0-9_-]+$/)) {
-      return 'anthropic';
-    }
-
-    // Google patterns
-    if (apiKey.match(/^AIza[A-Za-z0-9_-]{35}$/)) {
-      return 'google';
-    }
-
-    // Check if it's a JSON (Google service account)
-    try {
-      const parsed = JSON.parse(apiKey);
-      if (parsed.type === 'service_account' && parsed.private_key) {
-        return 'google';
-      }
-    } catch (e) {
-      // Not JSON, continue
-    }
-
-    return null;
+// Claude Utility functions
+export const claudeUtils = {
+  // Validate Claude API key format
+  validateApiKey: (apiKey) => {
+    if (!apiKey) return false;
+    return apiKey.match(/^sk-ant-api03-[A-Za-z0-9_-]+$/);
   },
 
-  // Validate API key format
-  validateApiKeyFormat: (apiKey, provider) => {
-    const detectedProvider = aiUtils.detectProvider(apiKey);
-    return detectedProvider === provider;
-  },
-
-  // Format model name for display
+  // Format Claude model name for display
   formatModelName: (model) => {
-    if (!model) return '';
-    
-    // Convert model IDs to readable names
     const modelNames = {
-      'gpt-4o': 'GPT-4o',
-      'gpt-4o-mini': 'GPT-4o Mini',
-      'gpt-4-turbo': 'GPT-4 Turbo',
-      'gpt-4': 'GPT-4',
-      'gpt-3.5-turbo': 'GPT-3.5 Turbo',
       'claude-3-5-sonnet-20241022': 'Claude 3.5 Sonnet',
       'claude-3-5-haiku-20241022': 'Claude 3.5 Haiku',
       'claude-3-opus-20240229': 'Claude 3 Opus',
-      'claude-3-sonnet-20240229': 'Claude 3 Sonnet',
-      'claude-3-haiku-20240307': 'Claude 3 Haiku',
-      'gemini-1.5-pro': 'Gemini 1.5 Pro',
-      'gemini-1.5-flash': 'Gemini 1.5 Flash',
-      'gemini-pro': 'Gemini Pro',
-      'gemini-pro-vision': 'Gemini Pro Vision',
     };
-
-    return modelNames[model.id] || model.name || model.id;
+    return modelNames[model] || model;
   },
 
   // Estimate token count (rough estimation)
@@ -225,32 +82,12 @@ export const aiUtils = {
   // Format usage statistics
   formatUsage: (usage) => {
     if (!usage) return null;
-    
+
     return {
-      prompt_tokens: usage.prompt_tokens || 0,
-      completion_tokens: usage.completion_tokens || 0,
-      total_tokens: usage.total_tokens || 0,
+      input_tokens: usage.input_tokens || 0,
+      output_tokens: usage.output_tokens || 0,
+      total_tokens: (usage.input_tokens || 0) + (usage.output_tokens || 0),
     };
-  },
-
-  // Get provider display name
-  getProviderDisplayName: (provider) => {
-    const names = {
-      openai: 'OpenAI',
-      anthropic: 'Anthropic',
-      google: 'Google AI',
-    };
-    return names[provider] || provider;
-  },
-
-  // Get provider color for UI
-  getProviderColor: (provider) => {
-    const colors = {
-      openai: '#10a37f',
-      anthropic: '#d4a574',
-      google: '#4285f4',
-    };
-    return colors[provider] || '#6b7280';
   },
 };
 
@@ -277,19 +114,13 @@ export const withErrorHandling = (fn) => {
   };
 };
 
-// Export all services with error handling
+// Export simplified Claude services with error handling
 export default {
-  providers: Object.fromEntries(
-    Object.entries(aiProviderService).map(([key, fn]) => [key, withErrorHandling(fn)])
-  ),
   settings: Object.fromEntries(
-    Object.entries(aiSettingsService).map(([key, fn]) => [key, withErrorHandling(fn)])
-  ),
-  apiKeys: Object.fromEntries(
-    Object.entries(apiKeyService).map(([key, fn]) => [key, withErrorHandling(fn)])
+    Object.entries(claudeSettingsService).map(([key, fn]) => [key, withErrorHandling(fn)])
   ),
   chat: Object.fromEntries(
-    Object.entries(chatService).map(([key, fn]) => [key, withErrorHandling(fn)])
+    Object.entries(claudeChatService).map(([key, fn]) => [key, withErrorHandling(fn)])
   ),
-  utils: aiUtils,
+  utils: claudeUtils,
 };

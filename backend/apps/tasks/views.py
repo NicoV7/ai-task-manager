@@ -7,7 +7,7 @@ from django.utils import timezone
 import logging
 from .models import Task, Tag, AIAssistantInteraction
 from .serializers import TaskSerializer, TagSerializer, AIAssistantInteractionSerializer
-from .services import claude_service
+from .services import get_claude_service
 
 logger = logging.getLogger(__name__)
 
@@ -37,6 +37,9 @@ class TaskViewSet(viewsets.ModelViewSet):
             )
         
         try:
+            # Get user-specific Claude service
+            claude_service = get_claude_service(request.user)
+
             # Get AI suggestion from Claude
             ai_response = claude_service.get_task_suggestion(
                 task_title=task.title,
@@ -94,6 +97,9 @@ class TaskViewSet(viewsets.ModelViewSet):
             )
         
         try:
+            # Get user-specific Claude service
+            claude_service = get_claude_service(request.user)
+
             # Get AI breakdown from Claude
             subtasks_data = claude_service.breakdown_task(
                 task_title=task.title,

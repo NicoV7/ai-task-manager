@@ -2,7 +2,7 @@ import os
 import logging
 import json
 from typing import Optional, List, Dict
-import anthropic
+import requests
 from django.conf import settings
 
 logger = logging.getLogger(__name__)
@@ -10,36 +10,66 @@ logger = logging.getLogger(__name__)
 
 class ClaudeAIService:
     """Service for interacting with Claude AI API"""
-    
-    def __init__(self):
-        self.api_key = os.getenv('CLAUDE_API_KEY')
+
+    def __init__(self, user=None):
+        """
+        Initialize Claude service with user-specific settings
+
+        Args:
+            user: Django User instance to get Claude settings for
+        """
+        self.user = user
+        self.api_key = None
+        self.model = 'claude-3-5-sonnet-20241022'
+        self.max_tokens = 4096
+        self.temperature = 0.7
+
+        if user:
+            try:
+                from apps.ai_assistant.models import UserClaudeSettings
+                settings = UserClaudeSettings.objects.get(user=user)
+                if settings.has_valid_api_key():
+                    self.api_key = settings.api_key
+                    self.model = settings.model
+                    self.max_tokens = settings.max_tokens
+                    self.temperature = settings.temperature
+            except Exception as e:
+                logger.warning(f"Could not load user Claude settings: {str(e)}")
+
+        # Fallback to environment variable if no user-specific key
         if not self.api_key:
-            logger.warning("CLAUDE_API_KEY not found in environment variables")
-            self.client = None
-        else:
-            self.client = anthropic.Anthropic(api_key=self.api_key)
-    
+            self.api_key = os.getenv('CLAUDE_API_KEY')
+            if not self.api_key:
+                logger.warning("No Claude API key found in user settings or environment variables")
+
     def is_available(self) -> bool:
         """Check if Claude API is available"""
-        return self.client is not None
+        return bool(self.api_key and self.api_key.startswith('sk-ant-api03-'))
     
     def get_task_suggestion(self, task_title: str, task_description: str, user_message: str) -> str:
         """
         Get AI suggestion for a task based on task details and user message
-        
+
         Args:
             task_title: The title of the task
             task_description: The description of the task
             user_message: The user's specific question or request
-            
+
         Returns:
             AI-generated suggestion as a string
         """
         if not self.is_available():
-            return "AI service is currently unavailable. Please check your API configuration."
-        
+            return "AI service is currently unavailable. Please configure your Claude API key in settings."
+
         try:
-            # Construct a comprehensive prompt for Claude
+            # Prepare the request
+            headers = {
+                'Content-Type': 'application/json',
+                'x-api-key': self.api_key,
+                'anthropic-version': '2023-06-01'
+            }
+
+            # Construct the messages
             system_prompt = """You are an AI assistant for a task management application. You help users by providing practical, actionable suggestions for their tasks. Your responses should be:
 
 1. Helpful and specific to the task context
@@ -50,7 +80,7 @@ class ClaudeAIService:
 
 When users ask questions about their tasks, provide suggestions that could help them complete the task more effectively, break it down into smaller steps, identify potential challenges, or suggest resources/approaches."""
 
-            user_prompt = f"""Task: {task_title}
+            user_content = f"""Task: {task_title}
 
 Description: {task_description or "No description provided"}
 
@@ -58,38 +88,54 @@ User Question: {user_message}
 
 Please provide a helpful suggestion for this task."""
 
-            # Make API call to Claude
-            response = self.client.messages.create(
-                model="claude-3-haiku-20240307",  # Using Haiku for faster, cost-effective responses
-                max_tokens=300,  # Limit response length for task suggestions
-                temperature=0.7,  # Balanced creativity and consistency
-                system=system_prompt,
-                messages=[
+            payload = {
+                'model': self.model,
+                'max_tokens': min(300, self.max_tokens),  # Limit for task suggestions
+                'temperature': self.temperature,
+                'system': system_prompt,
+                'messages': [
                     {
-                        "role": "user", 
-                        "content": user_prompt
+                        'role': 'user',
+                        'content': user_content
                     }
                 ]
+            }
+
+            # Make API call to Claude
+            response = requests.post(
+                'https://api.anthropic.com/v1/messages',
+                headers=headers,
+                json=payload,
+                timeout=30
             )
-            
-            if response.content and len(response.content) > 0:
-                return response.content[0].text.strip()
+
+            if response.status_code == 200:
+                data = response.json()
+                if data.get('content') and len(data['content']) > 0:
+                    return data['content'][0]['text'].strip()
+                else:
+                    logger.error("Claude API returned empty response")
+                    return "I'm sorry, I couldn't generate a suggestion at this time. Please try again."
             else:
-                logger.error("Claude API returned empty response")
-                return "I'm sorry, I couldn't generate a suggestion at this time. Please try again."
-                
-        except anthropic.AuthenticationError:
-            logger.error("Claude API authentication failed - invalid API key")
-            return "AI service authentication failed. Please check the API key configuration."
-        
-        except anthropic.RateLimitError:
-            logger.error("Claude API rate limit exceeded")
-            return "AI service is temporarily busy. Please try again in a moment."
-        
-        except anthropic.APIError as e:
-            logger.error(f"Claude API error: {str(e)}")
-            return "AI service encountered an error. Please try again later."
-        
+                error_data = response.json() if response.content else {}
+                error_message = error_data.get('error', {}).get('message', 'Unknown error')
+                logger.error(f"Claude API error {response.status_code}: {error_message}")
+
+                if response.status_code == 401:
+                    return "AI service authentication failed. Please check your API key in settings."
+                elif response.status_code == 429:
+                    return "AI service is temporarily busy. Please try again in a moment."
+                else:
+                    return "AI service encountered an error. Please try again later."
+
+        except requests.exceptions.Timeout:
+            logger.error("Claude API request timeout")
+            return "AI service request timed out. Please try again."
+
+        except requests.exceptions.RequestException as e:
+            logger.error(f"Claude API request error: {str(e)}")
+            return "AI service connection error. Please check your internet connection."
+
         except Exception as e:
             logger.error(f"Unexpected error in Claude AI service: {str(e)}")
             return "An unexpected error occurred. Please try again later."
@@ -97,19 +143,25 @@ Please provide a helpful suggestion for this task."""
     def breakdown_task(self, task_title: str, task_description: str) -> List[Dict[str, str]]:
         """
         Break down a complex task into smaller subtasks using AI
-        
+
         Args:
             task_title: The title of the task to break down
             task_description: The description of the task
-            
+
         Returns:
             List of dictionaries with subtask information
         """
         if not self.is_available():
             return []
-        
+
         try:
-            system_prompt = """You are an AI assistant that helps break down complex tasks into smaller, manageable subtasks. 
+            headers = {
+                'Content-Type': 'application/json',
+                'x-api-key': self.api_key,
+                'anthropic-version': '2023-06-01'
+            }
+
+            system_prompt = """You are an AI assistant that helps break down complex tasks into smaller, manageable subtasks.
 
 Your response must be a valid JSON array containing objects with these exact fields:
 - "title": A clear, concise title for the subtask (max 100 characters)
@@ -126,71 +178,76 @@ Guidelines:
 
 Return ONLY the JSON array, no other text."""
 
-            user_prompt = f"""Task to break down:
+            user_content = f"""Task to break down:
 Title: {task_title}
 Description: {task_description or "No description provided"}
 
 Please break this task into smaller, manageable subtasks. Return as JSON array only."""
 
-            response = self.client.messages.create(
-                model="claude-3-haiku-20240307",
-                max_tokens=1000,
-                temperature=0.3,  # Lower temperature for more consistent JSON format
-                system=system_prompt,
-                messages=[
+            payload = {
+                'model': self.model,
+                'max_tokens': min(1000, self.max_tokens),
+                'temperature': 0.3,  # Lower temperature for more consistent JSON format
+                'system': system_prompt,
+                'messages': [
                     {
-                        "role": "user", 
-                        "content": user_prompt
+                        'role': 'user',
+                        'content': user_content
                     }
                 ]
+            }
+
+            response = requests.post(
+                'https://api.anthropic.com/v1/messages',
+                headers=headers,
+                json=payload,
+                timeout=30
             )
-            
-            if response.content and len(response.content) > 0:
-                response_text = response.content[0].text.strip()
-                
-                # Extract JSON from the response
-                try:
-                    # Try to parse the response as JSON
-                    subtasks = json.loads(response_text)
-                    
-                    # Validate the structure
-                    if isinstance(subtasks, list):
-                        validated_subtasks = []
-                        for subtask in subtasks:
-                            if isinstance(subtask, dict) and 'title' in subtask and 'description' in subtask:
-                                # Ensure all required fields exist with defaults
-                                validated_subtask = {
-                                    'title': str(subtask.get('title', 'Untitled Subtask'))[:100],
-                                    'description': str(subtask.get('description', '')),
-                                    'priority': subtask.get('priority', 'medium') if subtask.get('priority') in ['low', 'medium', 'high', 'urgent'] else 'medium'
-                                }
-                                validated_subtasks.append(validated_subtask)
-                        
-                        return validated_subtasks[:8]  # Limit to 8 subtasks max
-                    
-                except json.JSONDecodeError:
-                    logger.error(f"Failed to parse Claude response as JSON: {response_text}")
-                    return []
-            
-            logger.error("Claude API returned empty or invalid response for task breakdown")
+
+            if response.status_code == 200:
+                data = response.json()
+                if data.get('content') and len(data['content']) > 0:
+                    response_text = data['content'][0]['text'].strip()
+
+                    # Extract JSON from the response
+                    try:
+                        # Try to parse the response as JSON
+                        subtasks = json.loads(response_text)
+
+                        # Validate the structure
+                        if isinstance(subtasks, list):
+                            validated_subtasks = []
+                            for subtask in subtasks:
+                                if isinstance(subtask, dict) and 'title' in subtask and 'description' in subtask:
+                                    # Ensure all required fields exist with defaults
+                                    validated_subtask = {
+                                        'title': str(subtask.get('title', 'Untitled Subtask'))[:100],
+                                        'description': str(subtask.get('description', '')),
+                                        'priority': subtask.get('priority', 'medium') if subtask.get('priority') in ['low', 'medium', 'high', 'urgent'] else 'medium'
+                                    }
+                                    validated_subtasks.append(validated_subtask)
+
+                            return validated_subtasks[:8]  # Limit to 8 subtasks max
+
+                    except json.JSONDecodeError:
+                        logger.error(f"Failed to parse Claude response as JSON: {response_text}")
+                        return []
+            else:
+                logger.error(f"Claude API error {response.status_code} during task breakdown")
+
             return []
-                
-        except anthropic.AuthenticationError:
-            logger.error("Claude API authentication failed during task breakdown")
+
+        except requests.exceptions.RequestException as e:
+            logger.error(f"Claude API request error during task breakdown: {str(e)}")
             return []
-        
-        except anthropic.RateLimitError:
-            logger.error("Claude API rate limit exceeded during task breakdown")
-            return []
-        
-        except anthropic.APIError as e:
-            logger.error(f"Claude API error during task breakdown: {str(e)}")
-            return []
-        
+
         except Exception as e:
             logger.error(f"Unexpected error in task breakdown: {str(e)}")
             return []
 
 
-# Create a singleton instance
-claude_service = ClaudeAIService()
+def get_claude_service(user=None):
+    """
+    Factory function to get a Claude service instance for a specific user
+    """
+    return ClaudeAIService(user=user)
